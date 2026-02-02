@@ -1,0 +1,26 @@
+# 排除所有 .bak 备份文件（无论文件名/路径）
+*.bak
+# 排除所有 .back 备份文件
+*.back
+# 可选：排除其他常见备份/临时文件
+*.tmp
+*.backup
+*~  # Linux/macOS 下编辑器生成的临时备份
+# 忽略根目录dist文件
+dist/
+dist.zip
+
+# 忽略根目录的back、backup文件夹（仅根目录生效）
+back/
+backup/
+
+# 【可选】若要忽略所有层级的back/backup（如src/back、test/backup），替换上面两行为：
+# **/back/
+# **/backup/
+
+# 可选：补充其他常见忽略规则（按需保留）
+node_modules/
+.DS_Store
+.vscode/
+temp/
+logs/

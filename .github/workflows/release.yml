@@ -1,0 +1,80 @@
+name: Release Chrome Extension
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version and determine tag
+        id: tag_info
+        run: |
+          VERSION="v$(node -p "require('./package.json').version")"
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$VERSION" >> $GITHUB_OUTPUT
+            if git rev-parse "$VERSION" >/dev/null 2>&1; then
+              echo "Tag $VERSION already exists. Skipping auto-release."
+              echo "should_release=false" >> $GITHUB_OUTPUT
+            else
+              echo "New version $VERSION detected. Proceeding with auto-release."
+              echo "should_release=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Setup Node.js
+        if: steps.tag_info.outputs.should_release == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: steps.tag_info.outputs.should_release == 'true'
+        run: npm ci
+
+      - name: Build project
+        if: steps.tag_info.outputs.should_release == 'true'
+        run: npm run build
+
+      - name: Zip dist folder
+        if: steps.tag_info.outputs.should_release == 'true'
+        run: |
+          cd dist
+          zip -r ../NewTab.zip ./*
+          cd ..
+
+      - name: Get commit message
+        if: steps.tag_info.outputs.should_release == 'true'
+        id: commit_msg
+        run: |
+          echo "msg<<EOF" >> $GITHUB_OUTPUT
+          git log -1 --pretty=%B >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: steps.tag_info.outputs.should_release == 'true'
+        with:
+          tag_name: ${{ steps.tag_info.outputs.tag }}
+          name: ${{ steps.tag_info.outputs.tag }}
+          files: NewTab.zip
+          body: ${{ steps.commit_msg.outputs.msg }}
+          draft: false
+          prerelease: false
