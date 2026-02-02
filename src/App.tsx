@@ -289,8 +289,12 @@ export default function App() {
       {/* 夜间模式遮罩层 */}
       {!isLight && settings.enableDarkMask && (
         <div
-          className={`absolute inset-0 z-0 pointer-events-none transition-all duration-1000 ${backgroundImage ? 'bg-black/40' : 'bg-[#0f1115]'
-            }`}
+          className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000"
+          style={{
+            backgroundColor: backgroundImage
+              ? `rgba(0, 0, 0, ${(settings.darkMaskOpacity ?? 40) / 100})`
+              : '#0f1115'
+          }}
         />
       )}
 

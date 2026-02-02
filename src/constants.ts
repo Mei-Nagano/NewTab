@@ -46,6 +46,7 @@ export interface AppSettings {
   hideOptions?: HideOptions;
   showSeconds?: boolean;
   enableDarkMask: boolean;
+  darkMaskOpacity?: number;
 }
 
 export const DEFAULT_LINKS: Link[] = [
@@ -80,7 +81,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   showSeconds: false,
   enableDarkMask: true,
+  darkMaskOpacity: 40,
   webdav: DEFAULT_WEBDAV,
 };
 
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.0.4';
