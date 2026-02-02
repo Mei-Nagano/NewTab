@@ -194,6 +194,23 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                 <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
                     }`}>
                     <div className="flex flex-col gap-0.5">
+                        <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>夜间模式暗色遮罩</span>
+                        <span className="text-xs text-gray-500 font-medium">开启后夜间模式下将叠加一层暗色遮罩以降暗背景</span>
+                    </div>
+                    <button
+                        onClick={() => onSettingsChange({ ...settings, enableDarkMask: !settings.enableDarkMask })}
+                        className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none border-2 ${settings.enableDarkMask
+                            ? 'bg-blue-600 border-blue-600 ring-4 ring-blue-500/10'
+                            : (theme === 'light' ? 'bg-gray-200 border-gray-300 shadow-inner' : 'bg-white/10 border-white/5')
+                            }`}
+                    >
+                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform duration-300 ${settings.enableDarkMask ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                </div>
+
+                <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
+                    }`}>
+                    <div className="flex flex-col gap-0.5">
                         <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>时钟显示秒数</span>
                         <span className="text-xs text-gray-500 font-medium">开启后时钟将实时显示秒数</span>
                     </div>
