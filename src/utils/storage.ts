@@ -7,61 +7,87 @@ const isExtension = () => {
   return typeof chrome !== 'undefined' && !!chrome.storage;
 };
 
+// 内部常量：用于标识本地存储的图片数据
+const LOCAL_IMAGE_FLAG = '[LOCAL_IMAGE]';
+const IMAGE_STORAGE_KEY = 'newtab_custom_bg_data';
+
 // 加载设置
 export const loadSettings = async (): Promise<AppSettings> => {
+  let settings: AppSettings;
+
   if (isExtension()) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['settings'], (result: any) => {
-        if (result.settings) {
-          const settings = result.settings;
-          // 迁移：将旧版links转换为groups
-          if ((settings as any).links && (!settings.groups || settings.groups.length === 0)) {
-            settings.groups = [{
-              id: 'g-migrated',
-              title: '常用',
-              links: (settings as any).links
-            }];
-            delete (settings as any).links;
-          }
-          resolve({ ...DEFAULT_SETTINGS, ...settings });
-        } else {
-          resolve(DEFAULT_SETTINGS);
-        }
-      });
+    const result = await new Promise<any>((resolve) => {
+      chrome.storage.local.get(['settings'], resolve);
     });
+    settings = result.settings ? { ...DEFAULT_SETTINGS, ...result.settings } : DEFAULT_SETTINGS;
   } else {
-    // 开发环境降级使用LocalStorage
     const stored = localStorage.getItem('newtab_settings');
     if (stored) {
       try {
-        const settings = JSON.parse(stored);
-        // LocalStorage也需要迁移
-        if (settings.links && (!settings.groups || settings.groups.length === 0)) {
-          settings.groups = [{
-            id: 'g-migrated',
-            title: '常用',
-            links: settings.links
-          }];
-          delete settings.links;
-        }
-        return { ...DEFAULT_SETTINGS, ...settings };
+        const parsed = JSON.parse(stored);
+        settings = { ...DEFAULT_SETTINGS, ...parsed };
       } catch (e) {
         console.error("从localStorage解析设置失败", e);
-        return DEFAULT_SETTINGS;
+        settings = DEFAULT_SETTINGS;
       }
+    } else {
+      settings = DEFAULT_SETTINGS;
     }
-    return DEFAULT_SETTINGS;
   }
+
+  // 迁移：旧版 links -> groups (保持原有逻辑)
+  if ((settings as any).links && (!settings.groups || settings.groups.length === 0)) {
+    settings.groups = [{
+      id: 'g-migrated',
+      title: '常用',
+      links: (settings as any).links
+    }];
+    delete (settings as any).links;
+  }
+
+  // 处理分离存储的图片数据
+  if (settings.customBgUrl === LOCAL_IMAGE_FLAG) {
+    if (isExtension()) {
+      const imgResult = await new Promise<any>((resolve) => {
+        chrome.storage.local.get([IMAGE_STORAGE_KEY], resolve);
+      });
+      settings.customBgUrl = imgResult[IMAGE_STORAGE_KEY] || '';
+    } else {
+      settings.customBgUrl = localStorage.getItem(IMAGE_STORAGE_KEY) || '';
+    }
+  }
+
+  return settings;
 };
 
 // 保存设置
 export const saveSettings = async (settings: AppSettings): Promise<void> => {
+  // 为了不影响内存中的状态，我们克隆一份设置用于存储
+  const settingsToSave = { ...settings };
+  let imageData = '';
+
+  // 如果 customBgUrl 是 Base64 数据，将其分离
+  if (settings.customBgUrl?.startsWith('data:')) {
+    imageData = settings.customBgUrl;
+    settingsToSave.customBgUrl = LOCAL_IMAGE_FLAG;
+  }
+
   if (isExtension()) {
+    const storageData: any = { settings: settingsToSave };
+    if (imageData) {
+      storageData[IMAGE_STORAGE_KEY] = imageData;
+    }
     return new Promise((resolve) => {
-      chrome.storage.local.set({ settings }, () => resolve());
+      chrome.storage.local.set(storageData, () => resolve());
     });
   } else {
-    localStorage.setItem('newtab_settings', JSON.stringify(settings));
+    localStorage.setItem('newtab_settings', JSON.stringify(settingsToSave));
+    if (imageData) {
+      localStorage.setItem(IMAGE_STORAGE_KEY, imageData);
+    } else if (settings.customBgUrl !== LOCAL_IMAGE_FLAG) {
+      // 如果不是本地图片且不是占位符，清理掉旧的图片存储
+      localStorage.removeItem(IMAGE_STORAGE_KEY);
+    }
   }
 };
 
@@ -147,7 +173,13 @@ export const getBrowserBookmarks = async (): Promise<Link[]> => {
 // 导出设置到JSON文件
 export const exportSettingsToFile = (settings: AppSettings): void => {
   try {
-    const dataStr = JSON.stringify(settings, null, 2);
+    // 导出时克隆数据并移除图片数据
+    const exportData = { ...settings };
+    if (exportData.customBgUrl?.startsWith('data:')) {
+      exportData.customBgUrl = ''; // 导出文件中排除 Base64 图片
+    }
+
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
 
     const exportFileDefaultName = `newtab-backup-${new Date().toISOString().slice(0, 10)}.json`;
