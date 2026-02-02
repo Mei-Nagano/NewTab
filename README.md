@@ -1,7 +1,7 @@
 # ✨ NewTab - 美观且极简的新标签页
 
 <div align="center">
-  <img src="public/icons/icon128.svg" alt="NewTab Logo" width="128" height="128" />
+  <img src="public/icons/icon128.png" alt="NewTab Logo" width="128" height="128" />
   
   <p>
     一款美观、高度可定制且无干扰的 Chrome 新标签页扩展。
