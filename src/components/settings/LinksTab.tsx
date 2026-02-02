@@ -14,6 +14,8 @@ import {
 import { SortableLinkItem } from './SortableLinkItem';
 import { reorderItems } from '../../utils/sortUtils';
 import type { AppSettings, Link, LinkGroup } from '../../constants';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { AlertDialog } from '../AlertDialog';
 
 interface LinksTabProps {
     settings: AppSettings;
@@ -43,6 +45,20 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     // Dropdown state
     const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
     const groupDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Dialog state
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+
+    const [alertDialog, setAlertDialog] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+    }>({ isOpen: false, title: '', message: '' });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -86,16 +102,27 @@ export const LinksTab: React.FC<LinksTabProps> = ({
 
     const deleteGroup = (id: string) => {
         if (settings.groups.length <= 1) {
-            alert("至少需要保留一个分组。");
+            setAlertDialog({
+                isOpen: true,
+                title: '无法删除',
+                message: '至少需要保留一个分组。'
+            });
             return;
         }
-        if (!window.confirm("确定要删除此分组及其所有链接吗？")) return;
 
-        const remaining = settings.groups.filter(g => g.id !== id);
-        onSettingsChange({ ...settings, groups: remaining });
-        if (id === activeGroupId) {
-            setActiveGroupId(remaining[0].id);
-        }
+        const group = settings.groups.find(g => g.id === id);
+        setConfirmDialog({
+            isOpen: true,
+            title: '删除分组',
+            message: `确定要删除 "${group?.title || '此分组'}" 及其所有链接吗？此操作无法撤销。`,
+            onConfirm: () => {
+                const remaining = settings.groups.filter(g => g.id !== id);
+                onSettingsChange({ ...settings, groups: remaining });
+                if (id === activeGroupId) {
+                    setActiveGroupId(remaining[0].id);
+                }
+            }
+        });
     };
 
     const updateGroupTitle = (id: string, newTitle: string) => {
@@ -170,17 +197,23 @@ export const LinksTab: React.FC<LinksTabProps> = ({
 
     const deleteSelectedLinks = () => {
         if (selectedLinkIds.size === 0) return;
-        if (!window.confirm(`确定要删除 ${selectedLinkIds.size} 个链接吗？`)) return;
 
-        onSettingsChange({
-            ...settings,
-            groups: settings.groups.map(g =>
-                g.id === activeGroupId
-                    ? { ...g, links: g.links.filter(l => !selectedLinkIds.has(l.id)) }
-                    : g
-            )
+        setConfirmDialog({
+            isOpen: true,
+            title: '删除链接',
+            message: `确定要删除 ${selectedLinkIds.size} 个选中的链接吗？此操作无法撤销。`,
+            onConfirm: () => {
+                onSettingsChange({
+                    ...settings,
+                    groups: settings.groups.map(g =>
+                        g.id === activeGroupId
+                            ? { ...g, links: g.links.filter(l => !selectedLinkIds.has(l.id)) }
+                            : g
+                    )
+                });
+                setSelectedLinkIds(new Set());
+            }
         });
-        setSelectedLinkIds(new Set());
     };
 
     const handleLinkDragEnd = (event: DragEndEvent) => {
@@ -504,6 +537,23 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                     </DndContext>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmDialog.isOpen}
+                title={confirmDialog.title}
+                message={confirmDialog.message}
+                theme={theme === 'light' ? 'light' : 'dark'}
+                onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmDialog.onConfirm}
+            />
+
+            <AlertDialog
+                isOpen={alertDialog.isOpen}
+                title={alertDialog.title}
+                message={alertDialog.message}
+                theme={theme === 'light' ? 'light' : 'dark'}
+                onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 };
