@@ -35,7 +35,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
     const mutedClass = isLight ? 'text-gray-500' : 'text-gray-400';
 
     return (
-        <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed inset-0 z-[1000] flex items-center justify-center p-4 transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
                 onClick={onClose}

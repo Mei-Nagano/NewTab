@@ -267,7 +267,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
     const activeGroupTitle = tempSettings.groups.find(g => g.id === activeGroupId)?.title || '未选择分组';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
             <div className={`relative w-full max-w-4xl h-[85vh] border rounded-2xl shadow-2xl overflow-hidden flex animate-slide-up transition-colors duration-300 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1a1b1e] border-white/5'

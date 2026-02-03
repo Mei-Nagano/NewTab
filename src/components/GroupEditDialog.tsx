@@ -42,7 +42,7 @@ export const GroupEditDialog: React.FC<GroupEditDialogProps> = ({
         : 'bg-gray-800 border-gray-700 text-white focus:border-blue-500';
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
             <div className={`relative w-full max-w-sm ${bgClass} border ${borderClass} rounded-2xl shadow-2xl overflow-hidden animate-slide-up`}>
@@ -85,8 +85,8 @@ export const GroupEditDialog: React.FC<GroupEditDialogProps> = ({
                         onClick={handleSave}
                         disabled={!title.trim()}
                         className={`px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors ${title.trim()
-                                ? 'bg-blue-600 hover:bg-blue-500'
-                                : 'bg-gray-400 cursor-not-allowed'
+                            ? 'bg-blue-600 hover:bg-blue-500'
+                            : 'bg-gray-400 cursor-not-allowed'
                             }`}
                     >
                         保存
