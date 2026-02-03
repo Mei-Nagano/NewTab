@@ -181,9 +181,9 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
       else if (vw >= 768) cols = 5;
 
       // 估算头部占比 (Clock + Search + Padding + Pagination Controls)
-      const overhead = 380;
+      const overhead = 420; // Increased overhead safety
       const availableHeight = vh - overhead;
-      const itemHeight = 110; // 链接项的大约高度 (包括 gap)
+      const itemHeight = 130; // Increased item height safety
 
       const rows = Math.max(1, Math.floor(availableHeight / itemHeight));
       setItemsPerPage(rows * cols);
@@ -275,7 +275,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl flex flex-col gap-8 pb-10">
+    <div className={`w-full max-w-5xl flex flex-col gap-8 ${isPagination ? 'pb-4' : 'pb-10'}`}>
       {isPagination ? (
         <div className="w-full">
           <DndContext
