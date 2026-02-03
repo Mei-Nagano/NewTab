@@ -280,7 +280,7 @@ export default function App() {
         style={{
           backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
           opacity: backgroundImage ? 1 : 0,
-          filter: `brightness(${settings.bgBlur ? 0.85 : 1.0}) contrast(1.0) blur(${settings.bgBlur ? (settings.bgBlurAmount || 8) + 'px' : '0px'})`
+          filter: `brightness(${settings.bgBlur ? 0.85 : 1.0}) contrast(1.0) blur(${settings.bgBlur ? (settings.bgBlurAmount ?? 8) + 'px' : '0px'})`
         }}
       />
 

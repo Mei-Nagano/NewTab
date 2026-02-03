@@ -155,7 +155,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                                 <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>背景模糊效果</span>
                                 {settings.bgBlur && (
                                     <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-white/10 text-gray-300'}`}>
-                                        {settings.bgBlurAmount || 8}px
+                                        {settings.bgBlurAmount ?? 8}px
                                     </span>
                                 )}
                             </div>
@@ -179,7 +179,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                                 min="0"
                                 max="50"
                                 step="1"
-                                value={settings.bgBlurAmount || 8}
+                                value={settings.bgBlurAmount ?? 8}
                                 onChange={(e) => onSettingsChange({ ...settings, bgBlurAmount: parseInt(e.target.value) })}
                                 className={`w-full h-1.5 rounded-full appearance-none cursor-pointer ${theme === 'light' ? 'bg-gray-200' : 'bg-white/20'
                                     } [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110`}
