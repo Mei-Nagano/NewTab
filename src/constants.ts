@@ -88,4 +88,4 @@ export const DEFAULT_SETTINGS: AppSettings = {
   webdav: DEFAULT_WEBDAV,
 };
 
-export const APP_VERSION = '1.0.7';
+export const APP_VERSION = '1.0.8';

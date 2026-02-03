@@ -57,7 +57,7 @@ jobs:
         if: steps.tag_info.outputs.should_release == 'true'
         run: |
           cd dist
-          zip -r ../NewTab.zip ./*
+          zip -r ../NewTab-${{ steps.tag_info.outputs.tag }}.zip ./*
           cd ..
 
       - name: Get commit message
@@ -74,7 +74,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag_info.outputs.tag }}
           name: ${{ steps.tag_info.outputs.tag }}
-          files: NewTab.zip
+          files: NewTab-${{ steps.tag_info.outputs.tag }}.zip
           body: ${{ steps.commit_msg.outputs.msg }}
           draft: false
           prerelease: false

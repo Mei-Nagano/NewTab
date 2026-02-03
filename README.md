@@ -54,7 +54,7 @@
     1.  打开 Chrome 浏览器，访问 `chrome://extensions/`。
     2.  在右上角开启 **“开发者模式” (Developer mode)**。
     3.  点击 **“加载已解压的扩展程序” (Load unpacked)**。
-    4.  选择 Releases 解压后的文件夹`NewTab`（或方式二中构建的 `dist` 文件夹）。
+    4.  选择 Releases 解压后的文件夹`NewTab-vx.x.x`（或方式二中构建的 `dist` 文件夹）。
     5.  完成！打开新标签页即可体验。
 
 ### 💻 方式二：本地开发构建
