@@ -16,6 +16,7 @@ export interface LinkGroup {
 export type BgType = 'bing' | 'custom' | 'random';
 export type SearchEngine = 'google' | 'bing' | 'baidu';
 export type Theme = 'dark' | 'light';
+export type LinkDisplayMode = 'scroll' | 'pagination';
 
 export interface WebDavConfig {
   enabled: boolean;
@@ -47,6 +48,7 @@ export interface AppSettings {
   showSeconds?: boolean;
   enableDarkMask: boolean;
   darkMaskOpacity?: number;
+  linkDisplayMode?: LinkDisplayMode;
 }
 
 export const DEFAULT_LINKS: Link[] = [
@@ -82,7 +84,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showSeconds: false,
   enableDarkMask: true,
   darkMaskOpacity: 40,
+  linkDisplayMode: 'scroll',
   webdav: DEFAULT_WEBDAV,
 };
 
-export const APP_VERSION = '1.0.5';
+export const APP_VERSION = '1.0.6';

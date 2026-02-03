@@ -6,6 +6,7 @@ interface ConfirmDialogProps {
     title: string;
     message: string;
     theme: Theme;
+    confirmText?: string;
     onClose: () => void;
     onConfirm: () => void;
 }
@@ -15,6 +16,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     title,
     message,
     theme,
+    confirmText = '确定删除',
     onClose,
     onConfirm,
 }) => {
@@ -69,7 +71,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                         }}
                         className="w-full py-4 text-[15px] font-bold text-white bg-red-500 hover:bg-red-400 rounded-2xl transition-all shadow-lg shadow-red-500/25 active:scale-[0.98]"
                     >
-                        确定删除
+                        {confirmText}
                     </button>
                     <button
                         onClick={onClose}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { AppSettings, Link } from '../constants';
-import { APP_VERSION } from '../constants';
+import { APP_VERSION, DEFAULT_SETTINGS } from '../constants';
 import { getBrowserBookmarks, exportSettingsToFile, importSettingsFromFile } from '../utils/storage';
 import { backupToWebDav, restoreFromWebDav } from '../utils/webdav';
 import { GeneralTab } from './settings/GeneralTab';
@@ -9,6 +9,7 @@ import { BackupTab } from './settings/BackupTab';
 import { BookmarkImportView } from './settings/BookmarkImportView';
 import { AboutTab } from './settings/AboutTab';
 import { AlertDialog } from './AlertDialog';
+import { ConfirmDialog } from './ConfirmDialog';
 
 declare var chrome: any;
 
@@ -49,6 +50,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
         isOpen: false,
         title: '',
         message: ''
+    });
+
+    // Reset Confirm Dialog State
+    const [resetConfirmDialog, setResetConfirmDialog] = useState<{ isOpen: boolean }>({
+        isOpen: false
     });
 
     // Initialize state when modal opens
@@ -238,6 +244,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
         setTimeout(() => setCacheClearStatus(''), 2500);
     };
 
+    // Reset Settings Logic (保留书签和分组)
+    const handleResetSettings = () => {
+        setResetConfirmDialog({ isOpen: true });
+    };
+
+    const confirmResetSettings = () => {
+        const currentGroups = tempSettings.groups;
+        const resetSettings = {
+            ...DEFAULT_SETTINGS,
+            groups: currentGroups, // 保留用户的书签和分组
+        };
+        setTempSettings(resetSettings);
+        setResetConfirmDialog({ isOpen: false });
+        setAlertConfig({
+            isOpen: true,
+            title: '设置已还原',
+            message: '所有设置已还原为默认值，但您的书签和分组已保留。点击"保存更改"以应用。'
+        });
+    };
+
     const activeGroupTitle = tempSettings.groups.find(g => g.id === activeGroupId)?.title || '未选择分组';
 
     return (
@@ -356,6 +382,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                         onSettingsChange={setTempSettings}
                                         onClearCache={handleClearCache}
                                         cacheClearStatus={cacheClearStatus}
+                                        onResetSettings={handleResetSettings}
                                         theme={theme}
                                     />
                                 )}
@@ -420,6 +447,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                 message={alertConfig.message}
                 theme={theme}
                 onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+            />
+
+            <ConfirmDialog
+                isOpen={resetConfirmDialog.isOpen}
+                title="还原所有设置"
+                message="此操作将重置所有设置为默认值，但会保留您的书签和分组。确定要继续吗？"
+                confirmText="确定还原"
+                theme={theme}
+                onClose={() => setResetConfirmDialog({ isOpen: false })}
+                onConfirm={confirmResetSettings}
             />
         </div>
     );

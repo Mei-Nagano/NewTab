@@ -6,10 +6,11 @@ interface GeneralTabProps {
     onSettingsChange: (settings: AppSettings) => void;
     onClearCache: () => void;
     cacheClearStatus: string;
+    onResetSettings: () => void;
     theme: 'light' | 'dark';
 }
 
-export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChange, onClearCache, cacheClearStatus, theme }) => {
+export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChange, onClearCache, cacheClearStatus, onResetSettings, theme }) => {
     const [isSearchDropdownOpen, setIsSearchDropdownOpen] = React.useState(false);
     const searchDropdownRef = React.useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -191,50 +192,50 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                     )}
                 </div>
 
-                <div className={`flex flex-col p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
-                    }`}>
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>夜间模式暗色遮罩</span>
-                                {settings.enableDarkMask && (
-                                    <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${theme === 'light' ? 'bg-gray-200 text-gray-600' : 'bg-white/10 text-gray-300'}`}>
-                                        {settings.darkMaskOpacity ?? 40}%
-                                    </span>
-                                )}
+                {theme !== 'light' && (
+                    <div className="flex flex-col p-4 px-5 rounded-2xl border transition-all bg-white/5 border-white/5 hover:border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-gray-200">夜间模式暗色遮罩</span>
+                                    {settings.enableDarkMask && (
+                                        <span className="text-xs px-1.5 py-0.5 rounded font-mono bg-white/10 text-gray-300">
+                                            {settings.darkMaskOpacity ?? 40}%
+                                        </span>
+                                    )}
+                                </div>
+                                <span className="text-xs text-gray-500 font-medium">开启后夜间模式下将叠加一层暗色遮罩以降暗背景</span>
                             </div>
-                            <span className="text-xs text-gray-500 font-medium">开启后夜间模式下将叠加一层暗色遮罩以降暗背景</span>
+                            <button
+                                onClick={() => onSettingsChange({ ...settings, enableDarkMask: !settings.enableDarkMask })}
+                                className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none border-2 flex-shrink-0 ${settings.enableDarkMask
+                                    ? 'bg-blue-600 border-blue-600 ring-4 ring-blue-500/10'
+                                    : 'bg-white/10 border-white/5'
+                                    }`}
+                            >
+                                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform duration-300 ${settings.enableDarkMask ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => onSettingsChange({ ...settings, enableDarkMask: !settings.enableDarkMask })}
-                            className={`relative w-11 h-6 rounded-full transition-all duration-300 focus:outline-none border-2 flex-shrink-0 ${settings.enableDarkMask
-                                ? 'bg-blue-600 border-blue-600 ring-4 ring-blue-500/10'
-                                : (theme === 'light' ? 'bg-gray-200 border-gray-300 shadow-inner' : 'bg-white/10 border-white/5')
-                                }`}
-                        >
-                            <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform duration-300 ${settings.enableDarkMask ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </button>
-                    </div>
 
-                    {settings.enableDarkMask && (
-                        <div className="pt-2 pb-1 animate-slide-down">
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                step="1"
-                                value={settings.darkMaskOpacity ?? 40}
-                                onChange={(e) => onSettingsChange({ ...settings, darkMaskOpacity: parseInt(e.target.value) })}
-                                className={`w-full h-1.5 rounded-full appearance-none cursor-pointer ${theme === 'light' ? 'bg-gray-200' : 'bg-white/20'
-                                    } [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110`}
-                            />
-                            <div className={`flex justify-between mt-1 text-[10px] font-medium ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <span>明亮</span>
-                                <span>昏暗</span>
+                        {settings.enableDarkMask && (
+                            <div className="pt-2 pb-1 animate-slide-down">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    value={settings.darkMaskOpacity ?? 40}
+                                    onChange={(e) => onSettingsChange({ ...settings, darkMaskOpacity: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-white/20 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
+                                />
+                                <div className="flex justify-between mt-1 text-[10px] font-medium text-gray-500">
+                                    <span>明亮</span>
+                                    <span>昏暗</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
 
                 <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
                     }`}>
@@ -250,6 +251,51 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                             }`}
                     >
                         <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform duration-300 ${settings.showSeconds ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                </div>
+
+                {/* 链接展示方式 */}
+                <div className="flex items-center gap-2 mt-8 px-1">
+                    <div className="w-1 h-4 bg-indigo-500 rounded-full" />
+                    <h4 className={`text-xs font-bold uppercase tracking-widest ${theme === 'light' ? 'text-gray-400' : 'text-gray-500'}`}>展示模式</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <button
+                        onClick={() => onSettingsChange({ ...settings, linkDisplayMode: 'scroll' })}
+                        className={`group relative flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 ${settings.linkDisplayMode === 'scroll' || !settings.linkDisplayMode
+                            ? (theme === 'light' ? 'bg-indigo-50/50 border-indigo-500 shadow-md shadow-indigo-500/10' : 'bg-indigo-500/10 border-indigo-500 text-indigo-400')
+                            : (theme === 'light' ? 'bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50' : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/[0.08]')
+                            }`}
+                    >
+                        <div className={`p-2 rounded-xl transition-all duration-300 ${settings.linkDisplayMode === 'scroll' || !settings.linkDisplayMode
+                            ? 'bg-indigo-500 text-white'
+                            : (theme === 'light' ? 'bg-gray-100 text-gray-500' : 'bg-white/10 text-gray-400')
+                            }`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 15l5 5 5-5"></path><path d="M7 9l5-5 5 5"></path></svg>
+                        </div>
+                        <div className="text-left">
+                            <span className="block text-sm font-bold">滑动展示</span>
+                            <span className="text-[10px] text-gray-500">传统的垂直滑动布局</span>
+                        </div>
+                    </button>
+
+                    <button
+                        onClick={() => onSettingsChange({ ...settings, linkDisplayMode: 'pagination' })}
+                        className={`group relative flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 ${settings.linkDisplayMode === 'pagination'
+                            ? (theme === 'light' ? 'bg-indigo-50/50 border-indigo-500 shadow-md shadow-indigo-500/10' : 'bg-indigo-500/10 border-indigo-500 text-indigo-400')
+                            : (theme === 'light' ? 'bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50' : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/[0.08]')
+                            }`}
+                    >
+                        <div className={`p-2 rounded-xl transition-all duration-300 ${settings.linkDisplayMode === 'pagination'
+                            ? 'bg-indigo-500 text-white'
+                            : (theme === 'light' ? 'bg-gray-100 text-gray-500' : 'bg-white/10 text-gray-400')
+                            }`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 17h6"></path><path d="M9 12h6"></path><path d="M9 7h6"></path><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                        </div>
+                        <div className="text-left">
+                            <span className="block text-sm font-bold">分页展示</span>
+                            <span className="text-[10px] text-gray-500">自适应全屏翻页布局</span>
+                        </div>
                     </button>
                 </div>
             </section>
@@ -453,6 +499,25 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                                 已清理
                             </span>
                         ) : '立即清理'}
+                    </button>
+                </div>
+
+                <div className={`flex items-center justify-between p-4 px-5 border rounded-2xl transition-all group ${theme === 'light'
+                    ? 'bg-red-50/30 border-red-100 hover:border-red-200 hover:bg-red-50/50 hover:shadow-sm'
+                    : 'bg-red-500/5 border-red-500/10 hover:border-red-500/20'
+                    }`}>
+                    <div className="flex flex-col gap-0.5">
+                        <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>还原所有设置</span>
+                        <span className="text-xs text-gray-500 font-medium">重置为默认设置，但保留书签和分组</span>
+                    </div>
+                    <button
+                        onClick={onResetSettings}
+                        className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all border ${theme === 'light'
+                            ? 'bg-white hover:bg-red-50 text-red-600 border-red-200 hover:border-red-300'
+                            : 'bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border-red-500/20 hover:border-red-500/30'
+                            }`}
+                    >
+                        还原设置
                     </button>
                 </div>
             </section>
