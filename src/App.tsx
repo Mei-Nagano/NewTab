@@ -261,6 +261,38 @@ export default function App() {
     setEditingGroup(null);
   };
 
+  // 保存当前壁纸
+  const handleSaveWallpaper = async () => {
+    if (!backgroundImage) return;
+
+    try {
+      const response = await fetch(backgroundImage);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      // 尝试从 blob type 获取后缀
+      const ext = blob.type.split('/')[1] || 'jpg';
+      a.download = `wallpaper-${new Date().toISOString().split('T')[0]}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error('Download failed', e);
+      // Fallback
+      const a = document.createElement('a');
+      a.href = backgroundImage;
+      a.download = `wallpaper-${Date.now()}`;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
+
+
   const currentTheme = adaptiveTheme;
 
   if (!loaded) {
@@ -431,6 +463,7 @@ export default function App() {
         onToggleHideOption={handleToggleHideOption}
         onToggleAllVisibility={handleToggleAllVisibility}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onSaveWallpaper={handleSaveWallpaper}
       />
 
       {/* 链接编辑对话框 */}
@@ -474,6 +507,7 @@ export default function App() {
           settings={settings}
           onSave={handleSaveSettings}
           theme={currentTheme}
+          onSaveWallpaper={handleSaveWallpaper}
         />
       )}
     </div>

@@ -19,9 +19,10 @@ interface SettingsModalProps {
     settings: AppSettings;
     onSave: (settings: AppSettings) => void;
     theme: 'light' | 'dark';
+    onSaveWallpaper?: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, theme }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, theme, onSaveWallpaper }) => {
     const [activeTab, setActiveTab] = useState<'general' | 'links' | 'backup' | 'about'>('general');
     const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
 
@@ -284,7 +285,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
 
                     <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                         <button
-                            onClick={() => setActiveTab('general')}
+                            onClick={() => { setActiveTab('general'); setIsImportMode(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'general'
                                 ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
                                 : (theme === 'light' ? 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5')
@@ -295,7 +296,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         </button>
 
                         <button
-                            onClick={() => setActiveTab('links')}
+                            onClick={() => { setActiveTab('links'); setIsImportMode(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'links'
                                 ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
                                 : (theme === 'light' ? 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5')
@@ -306,7 +307,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         </button>
 
                         <button
-                            onClick={() => setActiveTab('backup')}
+                            onClick={() => { setActiveTab('backup'); setIsImportMode(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'backup'
                                 ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
                                 : (theme === 'light' ? 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5')
@@ -317,7 +318,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         </button>
 
                         <button
-                            onClick={() => setActiveTab('about')}
+                            onClick={() => { setActiveTab('about'); setIsImportMode(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'about'
                                 ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
                                 : (theme === 'light' ? 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5')
@@ -383,6 +384,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                         onClearCache={handleClearCache}
                                         cacheClearStatus={cacheClearStatus}
                                         onResetSettings={handleResetSettings}
+                                        onSaveWallpaper={onSaveWallpaper}
                                         theme={theme}
                                     />
                                 )}

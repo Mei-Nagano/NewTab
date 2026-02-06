@@ -12,6 +12,7 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableLinkItem } from './SortableLinkItem';
+import { SiteIcon } from '../SiteIcon';
 import { reorderItems } from '../../utils/sortUtils';
 import type { AppSettings, Link, LinkGroup } from '../../constants';
 import { ConfirmDialog } from '../ConfirmDialog';
@@ -370,8 +371,17 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                                 ? 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50/30'
                                 : 'bg-black/20 border-white/10 hover:border-blue-500/50 hover:bg-white/5'
                                 }`}>
-                                {newLink.icon ? (
-                                    <img src={newLink.icon} alt="Icon" className="w-full h-full object-cover" />
+                                {(newLink.icon || newLink.url) ? (
+                                    <div className="w-full h-full p-1">
+                                        <SiteIcon
+                                            url={newLink.url}
+                                            title={newLink.title}
+                                            linkId={editingLinkId || undefined}
+                                            customIcon={newLink.icon}
+                                            size="w-full h-full"
+                                            className="rounded-xl"
+                                        />
+                                    </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-1">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-gray-400 group-hover:text-blue-500"><path d="M12 5v14M5 12h14" /></svg>

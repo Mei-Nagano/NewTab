@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Theme, Link } from '../constants';
+import { SiteIcon } from './SiteIcon';
 
 interface LinkEditDialogProps {
     isOpen: boolean;
@@ -9,38 +10,7 @@ interface LinkEditDialogProps {
     onSave: (updatedLink: Link) => void;
 }
 
-// 图标预览组件
-const IconPreview: React.FC<{ icon?: string; title: string }> = ({ icon, title }) => {
-    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
 
-    useEffect(() => {
-        if (!icon) {
-            setStatus('error');
-            return;
-        }
-        setStatus('loading');
-        const img = new Image();
-        img.src = icon;
-        img.onload = () => setStatus('loaded');
-        img.onerror = () => setStatus('error');
-    }, [icon]);
-
-    // 默认图标
-    const firstChar = title ? title.charAt(0).toUpperCase() : '?';
-    const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-purple-500', 'bg-pink-500'];
-    const colorIndex = title ? title.charCodeAt(0) % colors.length : 0;
-    const bgColor = colors[colorIndex];
-
-    if (status === 'loaded' && icon) {
-        return <img src={icon} alt={title} className="w-12 h-12 rounded-xl object-cover" />;
-    }
-
-    return (
-        <div className={`w-12 h-12 ${bgColor} rounded-xl flex items-center justify-center text-white font-bold text-lg`}>
-            {firstChar}
-        </div>
-    );
-};
 
 export const LinkEditDialog: React.FC<LinkEditDialogProps> = ({
     isOpen,
@@ -138,7 +108,15 @@ export const LinkEditDialog: React.FC<LinkEditDialogProps> = ({
                 <div className="p-4 space-y-4">
                     {/* 图标预览与上传 */}
                     <div className="flex items-center gap-4">
-                        <IconPreview icon={icon} title={title} />
+                        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                            <SiteIcon
+                                url={url}
+                                title={title}
+                                customIcon={icon}
+                                size="w-12 h-12"
+                                className="rounded-xl"
+                            />
+                        </div>
                         <div className="flex-1 space-y-2">
                             <input
                                 ref={fileInputRef}

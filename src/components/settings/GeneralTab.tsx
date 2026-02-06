@@ -7,10 +7,11 @@ interface GeneralTabProps {
     onClearCache: () => void;
     cacheClearStatus: string;
     onResetSettings: () => void;
+    onSaveWallpaper?: () => void;
     theme: 'light' | 'dark';
 }
 
-export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChange, onClearCache, cacheClearStatus, onResetSettings, theme }) => {
+export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChange, onClearCache, cacheClearStatus, onResetSettings, theme, onSaveWallpaper }) => {
     const [isSearchDropdownOpen, setIsSearchDropdownOpen] = React.useState(false);
     const searchDropdownRef = React.useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -237,6 +238,25 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                     </div>
                 )}
 
+                {/* Save Wallpaper Button */}
+                <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
+                    }`}>
+                    <div className="flex flex-col gap-0.5">
+                        <span className={`text-sm font-bold ${theme === 'light' ? 'text-gray-900' : 'text-gray-200'}`}>保存当前壁纸</span>
+                        <span className="text-xs text-gray-500 font-medium">将当前背景图片下载到本地</span>
+                    </div>
+                    <button
+                        onClick={onSaveWallpaper}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${theme === 'light'
+                            ? 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200 hover:border-gray-300'
+                            : 'bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border-white/5 hover:border-white/20'
+                            }`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        保存
+                    </button>
+                </div>
+
                 <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all ${theme === 'light' ? 'bg-gray-50/50 border-gray-100 hover:border-gray-200' : 'bg-white/5 border-white/5 hover:border-white/10'
                     }`}>
                     <div className="flex flex-col gap-0.5">
@@ -274,7 +294,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 15l5 5 5-5"></path><path d="M7 9l5-5 5 5"></path></svg>
                         </div>
                         <div className="text-left">
-                            <span className="block text-sm font-bold">滑动展示</span>
+                            <span className={`block text-sm font-bold ${(settings.linkDisplayMode === 'scroll' || !settings.linkDisplayMode) ? (theme === 'light' ? 'text-indigo-600' : 'text-indigo-400') : (theme === 'light' ? 'text-gray-900' : 'text-gray-200')}`}>滑动展示</span>
                             <span className="text-[10px] text-gray-500">传统的垂直滑动布局</span>
                         </div>
                     </button>
@@ -293,7 +313,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({ settings, onSettingsChan
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 17h6"></path><path d="M9 12h6"></path><path d="M9 7h6"></path><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
                         </div>
                         <div className="text-left">
-                            <span className="block text-sm font-bold">分页展示</span>
+                            <span className={`block text-sm font-bold ${settings.linkDisplayMode === 'pagination' ? (theme === 'light' ? 'text-indigo-600' : 'text-indigo-400') : (theme === 'light' ? 'text-gray-900' : 'text-gray-200')}`}>分页展示</span>
                             <span className="text-[10px] text-gray-500">自适应全屏翻页布局</span>
                         </div>
                     </button>

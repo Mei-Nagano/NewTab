@@ -24,6 +24,7 @@ export interface ContextMenuProps {
     onDeleteLink?: (link: Link, groupId: string) => void;
     onOpenSettings?: () => void;
     onToggleAllVisibility?: () => void;
+    onSaveWallpaper?: () => void;
 }
 
 export interface MenuItem {
