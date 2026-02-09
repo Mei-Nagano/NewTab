@@ -24,3 +24,8 @@ node_modules/
 .vscode/
 temp/
 logs/
+.opencode/
+.claude
+
+#opencode初始化文件
+AGENTS.md
