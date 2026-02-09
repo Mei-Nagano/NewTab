@@ -1,6 +1,7 @@
 import { type AppSettings, DEFAULT_SETTINGS, type Link } from '../constants';
 
-declare var chrome: any;
+declare const chrome: any;
+
 
 // 检查是否在Chrome扩展环境中
 const isExtension = () => {

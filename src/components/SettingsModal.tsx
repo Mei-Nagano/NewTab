@@ -6,12 +6,13 @@ import { backupToWebDav, restoreFromWebDav } from '../utils/webdav';
 import { GeneralTab } from './settings/GeneralTab';
 import { LinksTab } from './settings/LinksTab';
 import { BackupTab } from './settings/BackupTab';
+import { ToolsTab } from './settings/ToolsTab';
 import { BookmarkImportView } from './settings/BookmarkImportView';
 import { AboutTab } from './settings/AboutTab';
 import { AlertDialog } from './AlertDialog';
 import { ConfirmDialog } from './ConfirmDialog';
 
-declare var chrome: any;
+declare const chrome: any;
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -23,8 +24,9 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, theme, onSaveWallpaper }) => {
-    const [activeTab, setActiveTab] = useState<'general' | 'links' | 'backup' | 'about'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'links' | 'backup' | 'tools' | 'about'>('general');
     const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
+
 
     // Group State (Lifted from LinksTab to support Import)
     const [activeGroupId, setActiveGroupId] = useState<string>('');
@@ -271,8 +273,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-            <div className={`relative w-full max-w-4xl h-[85vh] border rounded-2xl shadow-2xl overflow-hidden flex animate-slide-up transition-colors duration-300 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1a1b1e] border-white/5'
+            <div className={`relative w-full max-w-5xl h-[85vh] border rounded-2xl shadow-2xl overflow-hidden flex animate-slide-up transition-colors duration-300 ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1a1b1e] border-white/5'
                 }`}>
+
 
                 {/* Sidebar */}
                 <div className={`w-48 border-r flex flex-col flex-shrink-0 transition-colors duration-300 ${theme === 'light' ? 'bg-gray-50/80 border-gray-100' : 'bg-black/30 border-white/5'
@@ -318,6 +321,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         </button>
 
                         <button
+                            onClick={() => { setActiveTab('tools'); setIsImportMode(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'tools'
+                                ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
+                                : (theme === 'light' ? 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' : 'text-gray-400 hover:text-gray-200 hover:bg-white/5')
+                                }`}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>实用工具</span>
+                        </button>
+
+                        <button
+
                             onClick={() => { setActiveTab('about'); setIsImportMode(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'about'
                                 ? (theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-500/15 text-blue-400')
@@ -348,8 +363,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                         }`}>
                         <h3 className={`text-lg font-medium ${theme === 'light' ? 'text-gray-900' : 'text-white'
                             }`}>
-                            {activeTab === 'general' ? '常规设置' : activeTab === 'links' ? '链接管理' : activeTab === 'backup' ? '备份与恢复' : '关于'}
+                            {activeTab === 'general' ? '常规设置' : activeTab === 'links' ? '链接管理' : activeTab === 'backup' ? '备份与恢复' : activeTab === 'tools' ? '实用工具' : '关于'}
                         </h3>
+
                         <button
                             onClick={onClose}
                             className={`p-2 -mr-2 rounded-lg transition-colors ${theme === 'light' ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -411,7 +427,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                         theme={theme}
                                     />
                                 )}
+                                {activeTab === 'tools' && (
+                                    <ToolsTab theme={theme} />
+                                )}
                                 {activeTab === 'about' && (
+
                                     <AboutTab
                                         theme={theme}
                                         onUpdateStatusChange={(status) => setUpdateStatus(status)}
