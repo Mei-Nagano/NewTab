@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize2, Minimize2, Play, Pause, RotateCcw } from 'lucide-react';
+import { Maximize2, Minimize2, Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { getCommonStyles } from './shared';
 
 interface ToolProps {
@@ -14,13 +14,20 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
     const [pomodoroMode, setPomodoroMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
     const [pomodoroFullscreen, setPomodoroFullscreen] = useState(false);
     const [pomodoroTransparentBg, setPomodoroTransparentBg] = useState(true);
+    const [soundEnabled, setSoundEnabled] = useState(true);
     const [pomodoroDurations, setPomodoroDurations] = useState({
         work: 25,
         shortBreak: 5,
         longBreak: 15
     });
 
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const styles = getCommonStyles(theme);
+
+    useEffect(() => {
+        // Initialize audio
+        audioRef.current = new Audio('sounds/bell.wav');
+    }, []);
 
     useEffect(() => {
         let interval: any;
@@ -30,10 +37,12 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
             }, 1000);
         } else if (pomodoroTime === 0) {
             setPomodoroIsRunning(false);
-            // Optional: Play a sound or notification here
+            if (soundEnabled && audioRef.current) {
+                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+            }
         }
         return () => clearInterval(interval);
-    }, [pomodoroIsRunning, pomodoroTime]);
+    }, [pomodoroIsRunning, pomodoroTime, soundEnabled]);
 
     // Handle ESC to exit fullscreen
     useEffect(() => {
@@ -127,10 +136,20 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
                         </div>
                     )}
 
-                    {/* Controls */}
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={toggleFullscreen}
+                        {/* Controls */}
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${theme === 'light'
+                                    ? 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
+                                    : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
+                                    } ${soundEnabled ? '' : 'opacity-50'}`}
+                                title={soundEnabled ? "关闭提示音" : "开启提示音"}
+                            >
+                                {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                            </button>
+                            <button
+                                onClick={toggleFullscreen}
                             className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${theme === 'light'
                                 ? 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
                                 : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
@@ -175,6 +194,13 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
                     
                     <div className="relative z-10 flex flex-col items-center w-full h-full justify-center">
                         <div className="absolute top-8 right-8 flex gap-4">
+                            <button
+                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                className="p-4 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md"
+                                title={soundEnabled ? "关闭提示音" : "开启提示音"}
+                            >
+                                {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+                            </button>
                             <button
                                 onClick={() => setPomodoroTransparentBg(!pomodoroTransparentBg)}
                                 className="p-4 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md"
