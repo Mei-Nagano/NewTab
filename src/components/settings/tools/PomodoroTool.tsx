@@ -2,27 +2,44 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Maximize2, Minimize2, Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { getCommonStyles } from './shared';
+import { type AppSettings, type PomodoroSettings, DEFAULT_POMODORO } from '../../../constants';
 
 interface ToolProps {
     theme: 'light' | 'dark';
     backgroundImage?: string;
+    settings: AppSettings;
+    onSettingsChange: (settings: AppSettings) => void;
 }
 
-export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) => {
-    const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
+export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage, settings, onSettingsChange }) => {
+    const pomodoroSettings = settings.pomodoro || DEFAULT_POMODORO;
+    
+    const [pomodoroTime, setPomodoroTime] = useState(pomodoroSettings.workDuration * 60);
     const [pomodoroIsRunning, setPomodoroIsRunning] = useState(false);
     const [pomodoroMode, setPomodoroMode] = useState<'work' | 'shortBreak' | 'longBreak'>('work');
     const [pomodoroFullscreen, setPomodoroFullscreen] = useState(false);
-    const [pomodoroTransparentBg, setPomodoroTransparentBg] = useState(true);
-    const [soundEnabled, setSoundEnabled] = useState(true);
-    const [pomodoroDurations, setPomodoroDurations] = useState({
-        work: 25,
-        shortBreak: 5,
-        longBreak: 15
-    });
+    
+    // Derived state/local state for the UI, but synchronized with settings
+    const soundEnabled = pomodoroSettings.soundEnabled;
+    const pomodoroTransparentBg = pomodoroSettings.transparentBg;
+    const pomodoroDurations = {
+        work: pomodoroSettings.workDuration,
+        shortBreak: pomodoroSettings.shortBreakDuration,
+        longBreak: pomodoroSettings.longBreakDuration
+    };
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const styles = getCommonStyles(theme);
+
+    const updatePomodoroSettings = (updates: Partial<PomodoroSettings>) => {
+        onSettingsChange({
+            ...settings,
+            pomodoro: {
+                ...pomodoroSettings,
+                ...updates
+            }
+        });
+    };
 
     useEffect(() => {
         // Initialize audio
@@ -126,7 +143,10 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
                                 value={pomodoroDurations[pomodoroMode] || ''}
                                 onChange={(e) => {
                                     const val = parseInt(e.target.value) || 1;
-                                    setPomodoroDurations(prev => ({ ...prev, [pomodoroMode]: val }));
+                                    const fieldName = pomodoroMode === 'work' ? 'workDuration' : 
+                                                    pomodoroMode === 'shortBreak' ? 'shortBreakDuration' : 
+                                                    'longBreakDuration';
+                                    updatePomodoroSettings({ [fieldName]: val });
                                     setPomodoroTime(val * 60);
                                 }}
                                 className={`w-16 p-1 text-center text-sm rounded-lg border outline-none focus:ring-2 focus:ring-rose-500/20 ${
@@ -139,7 +159,7 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
                         {/* Controls */}
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                onClick={() => updatePomodoroSettings({ soundEnabled: !soundEnabled })}
                                 className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${theme === 'light'
                                     ? 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
                                     : 'bg-white/5 text-gray-500 hover:bg-white/10 hover:text-gray-300'
@@ -195,14 +215,14 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage }) =>
                     <div className="relative z-10 flex flex-col items-center w-full h-full justify-center">
                         <div className="absolute top-8 right-8 flex gap-4">
                             <button
-                                onClick={() => setSoundEnabled(!soundEnabled)}
+                                onClick={() => updatePomodoroSettings({ soundEnabled: !soundEnabled })}
                                 className="p-4 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md"
                                 title={soundEnabled ? "关闭提示音" : "开启提示音"}
                             >
                                 {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
                             </button>
                             <button
-                                onClick={() => setPomodoroTransparentBg(!pomodoroTransparentBg)}
+                                onClick={() => updatePomodoroSettings({ transparentBg: !pomodoroTransparentBg })}
                                 className="p-4 rounded-full bg-white/10 hover:bg-white/20 text-white/50 hover:text-white transition-all backdrop-blur-md"
                                 title={pomodoroTransparentBg ? "切换纯色背景" : "显示壁纸背景"}
                             >

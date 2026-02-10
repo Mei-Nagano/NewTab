@@ -159,7 +159,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
                                     />
                                 )}
                                 {activeTab === 'tools' && (
-                                    <ToolsTab theme={theme} backgroundImage={props.backgroundImage} />
+                                    <ToolsTab 
+                                        theme={theme} 
+                                        backgroundImage={props.backgroundImage} 
+                                        settings={tempSettings}
+                                        onSettingsChange={setTempSettings}
+                                    />
                                 )}
                                 {activeTab === 'about' && (
                                     <AboutTab

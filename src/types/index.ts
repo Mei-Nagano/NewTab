@@ -35,6 +35,14 @@ export interface HideOptions {
   hideClock: boolean; // 隐藏时钟
 }
 
+export interface PomodoroSettings {
+  soundEnabled: boolean;
+  workDuration: number;
+  shortBreakDuration: number;
+  longBreakDuration: number;
+  transparentBg: boolean;
+}
+
 export interface AppSettings {
   bgType: BgType;
   customBgUrl: string;
@@ -49,4 +57,5 @@ export interface AppSettings {
   enableDarkMask: boolean;
   darkMaskOpacity?: number;
   linkDisplayMode?: LinkDisplayMode;
+  pomodoro?: PomodoroSettings;
 }

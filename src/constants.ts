@@ -1,4 +1,4 @@
-import type { AppSettings, Link, LinkGroup, WebDavConfig } from './types';
+import type { AppSettings, Link, LinkGroup, WebDavConfig, PomodoroSettings } from './types';
 
 export const DEFAULT_LINKS: Link[] = [
   { id: "1", title: "Google", url: "https://www.google.com" },
@@ -22,6 +22,14 @@ export const DEFAULT_WEBDAV: WebDavConfig = {
   password: "",
 };
 
+export const DEFAULT_POMODORO: PomodoroSettings = {
+  soundEnabled: true,
+  workDuration: 25,
+  shortBreakDuration: 5,
+  longBreakDuration: 15,
+  transparentBg: true,
+};
+
 export const DEFAULT_SETTINGS: AppSettings = {
   bgType: "bing",
   customBgUrl: "",
@@ -35,6 +43,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   darkMaskOpacity: 40,
   linkDisplayMode: "scroll",
   webdav: DEFAULT_WEBDAV,
+  pomodoro: DEFAULT_POMODORO,
 };
 
 export const APP_VERSION = __APP_VERSION__;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { QrCode, Timer } from 'lucide-react';
+import type { AppSettings } from '../../constants';
 import { Base64Tool } from './tools/Base64Tool';
 import { TimestampTool } from './tools/TimestampTool';
 import { JsonTool } from './tools/JsonTool';
@@ -9,9 +10,11 @@ import { PomodoroTool } from './tools/PomodoroTool';
 interface ToolsTabProps {
     theme: 'light' | 'dark';
     backgroundImage?: string;
+    settings: AppSettings;
+    onSettingsChange: (settings: AppSettings) => void;
 }
 
-export const ToolsTab: React.FC<ToolsTabProps> = ({ theme, backgroundImage }) => {
+export const ToolsTab: React.FC<ToolsTabProps> = ({ theme, backgroundImage, settings, onSettingsChange }) => {
     const [activeTool, setActiveTool] = useState<'base64' | 'timestamp' | 'json' | 'qrcode' | 'pomodoro'>('base64');
 
     const toolTabs = [
@@ -142,7 +145,14 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ theme, backgroundImage }) =>
                 {activeTool === 'timestamp' && <TimestampTool theme={theme} />}
                 {activeTool === 'json' && <JsonTool theme={theme} />}
                 {activeTool === 'qrcode' && <QrCodeTool theme={theme} />}
-                {activeTool === 'pomodoro' && <PomodoroTool theme={theme} backgroundImage={backgroundImage} />}
+                {activeTool === 'pomodoro' && (
+                    <PomodoroTool 
+                        theme={theme} 
+                        backgroundImage={backgroundImage} 
+                        settings={settings}
+                        onSettingsChange={onSettingsChange}
+                    />
+                )}
             </div>
         </div>
     );
