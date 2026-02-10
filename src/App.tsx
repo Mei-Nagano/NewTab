@@ -508,6 +508,7 @@ export default function App() {
           onSave={handleSaveSettings}
           theme={currentTheme}
           onSaveWallpaper={handleSaveWallpaper}
+          backgroundImage={backgroundImage}
         />
       )}
     </div>

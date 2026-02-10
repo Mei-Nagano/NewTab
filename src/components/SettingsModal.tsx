@@ -21,9 +21,10 @@ interface SettingsModalProps {
     onSave: (settings: AppSettings) => void;
     theme: 'light' | 'dark';
     onSaveWallpaper?: () => void;
+    backgroundImage?: string;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, theme, onSaveWallpaper }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, settings, onSave, theme, onSaveWallpaper, backgroundImage }) => {
     const [activeTab, setActiveTab] = useState<'general' | 'links' | 'backup' | 'tools' | 'about'>('general');
     const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
 
@@ -428,7 +429,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, s
                                     />
                                 )}
                                 {activeTab === 'tools' && (
-                                    <ToolsTab theme={theme} />
+                                    <ToolsTab theme={theme} backgroundImage={backgroundImage} />
                                 )}
                                 {activeTab === 'about' && (
 

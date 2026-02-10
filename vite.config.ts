@@ -21,5 +21,26 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/github-api/, '')
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('qrcode') || id.includes('jsqr')) {
+              return 'vendor-utils';
+            }
+            // return 'vendor'; // Allow other chunks to be handled automatically or grouped
+          }
+        }
+      }
+    }
   }
 })
