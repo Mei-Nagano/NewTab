@@ -8,7 +8,6 @@ export interface UpdateInfo {
 
 declare var chrome: any;
 
-// TODO: Replace with actual repository details
 export const GITHUB_OWNER = 'Mei-Nagano';
 export const GITHUB_REPO = 'NewTab';
 
@@ -27,7 +26,11 @@ export const checkUpdate = async (currentVersion: string, forceRefresh: boolean 
                 // Use cache if less than 5 minutes old
                 if (age < CACHE_DURATION) {
                     console.log('Using cached update info');
-                    return data;
+                    const hasUpdate = compareVersions(data.latestVersion, currentVersion) > 0;
+                    return {
+                        ...data,
+                        hasUpdate
+                    };
                 }
             }
         } catch (e) {
