@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Theme } from '../constants';
+import type { Theme } from '../../constants';
 
 interface ConfirmDialogProps {
     isOpen: boolean;

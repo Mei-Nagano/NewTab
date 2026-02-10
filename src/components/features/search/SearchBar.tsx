@@ -1,5 +1,5 @@
 import React, { useState, type FormEvent, useRef, useEffect } from 'react';
-import type { SearchEngine, Theme } from '../constants';
+import type { SearchEngine, Theme } from '../../../constants';
 
 interface SearchBarProps {
   engine: SearchEngine;

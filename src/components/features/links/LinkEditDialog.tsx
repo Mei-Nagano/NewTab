@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Theme, Link } from '../constants';
-import { SiteIcon } from './SiteIcon';
+import type { Theme, Link } from '../../../constants';
+import { SiteIcon } from '../../common/SiteIcon';
 
 interface LinkEditDialogProps {
     isOpen: boolean;

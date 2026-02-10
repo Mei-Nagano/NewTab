@@ -12,11 +12,11 @@ import {
     rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableLinkItem } from './SortableLinkItem';
-import { SiteIcon } from '../SiteIcon';
+import { SiteIcon } from '../common/SiteIcon';
 import { reorderItems } from '../../utils/sortUtils';
 import type { AppSettings, Link, LinkGroup } from '../../constants';
-import { ConfirmDialog } from '../ConfirmDialog';
-import { AlertDialog } from '../AlertDialog';
+import { ConfirmDialog } from '../common/ConfirmDialog';
+import { AlertDialog } from '../common/AlertDialog';
 
 interface LinksTabProps {
     settings: AppSettings;

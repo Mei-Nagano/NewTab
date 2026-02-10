@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Theme, Link, HideOptions } from '../../constants';
+import type { Theme, Link, HideOptions } from '../../types';
 
 export interface ContextMenuState {
     visible: boolean;

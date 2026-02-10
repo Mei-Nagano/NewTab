@@ -1,4 +1,5 @@
-import { type AppSettings, DEFAULT_SETTINGS, type Link } from '../constants';
+import { DEFAULT_SETTINGS } from '../constants';
+import type { AppSettings, Link } from '../types';
 
 declare const chrome: any;
 

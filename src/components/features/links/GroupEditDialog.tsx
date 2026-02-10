@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Theme } from '../constants';
+import type { Theme } from '../../../constants';
 
 interface GroupEditDialogProps {
     isOpen: boolean;

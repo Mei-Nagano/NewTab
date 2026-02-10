@@ -15,8 +15,8 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { LinkGroup, Theme, Link, LinkDisplayMode } from '../constants';
-import { SiteIcon } from './SiteIcon';
+import type { LinkGroup, Theme, Link, LinkDisplayMode } from '../../../constants';
+import { SiteIcon } from '../../common/SiteIcon';
 
 interface LinkGridProps {
   groups: LinkGroup[];

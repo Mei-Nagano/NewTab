@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Clock } from './components/Clock';
-import { SearchBar } from './components/SearchBar';
-import { LinkGrid } from './components/LinkGrid';
+import { Clock } from './components/features/widgets/Clock';
+import { SearchBar } from './components/features/search/SearchBar';
+import { LinkGrid } from './components/features/links/LinkGrid';
 import { SettingsModal } from './components/SettingsModal';
 import { ContextMenu, type ContextMenuState } from './components/ContextMenu';
-import { LinkEditDialog } from './components/LinkEditDialog';
-import { GroupEditDialog } from './components/GroupEditDialog';
-import { ConfirmDialog } from './components/ConfirmDialog';
+import { LinkEditDialog } from './components/features/links/LinkEditDialog';
+import { GroupEditDialog } from './components/features/links/GroupEditDialog';
+import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { loadSettings, saveSettings, fetchBingWallpaper, fetchRandomWallpaper } from './utils/storage';
 import { reorderLinksInGroup } from './utils/sortUtils';
 import { type AppSettings, type Link, type HideOptions, DEFAULT_SETTINGS } from './constants';

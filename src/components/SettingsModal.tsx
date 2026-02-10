@@ -6,8 +6,8 @@ import { BackupTab } from './settings/BackupTab';
 import { ToolsTab } from './settings/ToolsTab';
 import { BookmarkImportView } from './settings/BookmarkImportView';
 import { AboutTab } from './settings/AboutTab';
-import { AlertDialog } from './AlertDialog';
-import { ConfirmDialog } from './ConfirmDialog';
+import { AlertDialog } from './common/AlertDialog';
+import { ConfirmDialog } from './common/ConfirmDialog';
 import { useSettingsModal } from './settings/hooks/useSettingsModal';
 import { SettingsSidebar } from './settings/SettingsSidebar';
 
