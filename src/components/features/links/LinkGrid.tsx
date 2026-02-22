@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -152,7 +152,10 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
 }) => {
   const [activeLink, setActiveLink] = useState<{ link: Link; groupId: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(24); // 默认值
+  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const [isPaginationExpanded, setIsPaginationExpanded] = useState(true);
+  const wheelDeltaRef = useRef(0);
+  const collapseTimerRef = useRef<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -199,11 +202,37 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   const allLinks = filteredGroups.flatMap(g => g.links.map(l => ({ ...l, groupId: g.id })));
   const totalPages = Math.ceil(allLinks.length / itemsPerPage);
 
+  const clearCollapseTimer = () => {
+    if (collapseTimerRef.current !== null) {
+      window.clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+  };
+  const schedulePaginationCollapse = () => {
+    clearCollapseTimer();
+    collapseTimerRef.current = window.setTimeout(() => {
+      setIsPaginationExpanded(false);
+    }, 3000);
+  };
+
   useEffect(() => {
     if (currentPage >= totalPages && totalPages > 0) {
       setCurrentPage(totalPages - 1);
     }
   }, [allLinks.length, totalPages, currentPage]);
+
+  useEffect(() => {
+    if (!isPagination || totalPages <= 1) {
+      clearCollapseTimer();
+      setIsPaginationExpanded(true);
+      return;
+    }
+    setIsPaginationExpanded(true);
+    schedulePaginationCollapse();
+    return () => {
+      clearCollapseTimer();
+    };
+  }, [isPagination, totalPages]);
 
   if (!filteredGroups || filteredGroups.length === 0) {
     return (
@@ -231,44 +260,94 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
     }
   };
 
-  const renderPaginationControls = () => {
+  const handlePaginationWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (!isPagination || totalPages <= 1) return;
+    e.preventDefault();
+    wheelDeltaRef.current += e.deltaY;
+    const threshold = 40;
+    if (wheelDeltaRef.current >= threshold) {
+      setCurrentPage(p => Math.min(totalPages - 1, p + 1));
+      wheelDeltaRef.current = 0;
+    } else if (wheelDeltaRef.current <= -threshold) {
+      setCurrentPage(p => Math.max(0, p - 1));
+      wheelDeltaRef.current = 0;
+    }
+  };
+
+  const handlePaginationMouseEnter = () => {
+    clearCollapseTimer();
+    setIsPaginationExpanded(true);
+  };
+
+  const handlePaginationMouseLeave = () => {
+    clearCollapseTimer();
+    setIsPaginationExpanded(false);
+  };
+
+  const renderPaginationControls = (className?: string) => {
     if (!isPagination || totalPages <= 1) return null;
 
     return (
-      <div className="flex items-center justify-center gap-6 mt-8 animate-fade-in">
+      <div
+        onWheel={handlePaginationWheel}
+        onMouseEnter={handlePaginationMouseEnter}
+        onMouseLeave={handlePaginationMouseLeave}
+        className={`flex flex-col items-center animate-fade-in transition-all duration-300 ${className ?? ''} ${isLight
+          ? 'bg-white/35 border-white/50'
+          : 'bg-black/20 border-white/10'
+          } backdrop-blur-md border ${isPaginationExpanded ? 'gap-4 rounded-2xl px-2.5 py-3' : 'gap-2 rounded-full px-2 py-2.5'}`}
+      >
         <button
           onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
           disabled={currentPage === 0}
-          className={`p-2.5 rounded-full transition-all duration-300 ${isLight
+          className={`${isPaginationExpanded ? 'p-2.5 rounded-full' : 'hidden'} transition-all duration-300 ${isLight
             ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
             : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
             } border disabled:cursor-not-allowed active:scale-90`}
+          aria-label="上一页"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
         </button>
 
-        <div className="flex gap-2.5">
+        <div className={`${isPaginationExpanded ? 'flex' : 'hidden'} flex-col items-center gap-2.5 max-h-[42vh] overflow-y-auto py-1`}>
           {Array.from({ length: totalPages }).map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i)}
               className={`h-2 rounded-full transition-all duration-500 ${currentPage === i
-                ? (isLight ? 'bg-indigo-500 w-8' : 'bg-indigo-400 w-8')
-                : (isLight ? 'bg-slate-300 w-2 hover:bg-slate-400' : 'bg-white/20 w-2 hover:bg-white/40')
+                ? (isLight ? 'bg-indigo-500 h-7 w-2.5' : 'bg-indigo-400 h-7 w-2.5')
+                : (isLight ? 'bg-slate-300 h-2 w-2 hover:bg-slate-400' : 'bg-white/20 h-2 w-2 hover:bg-white/40')
                 }`}
+              aria-label={`第 ${i + 1} 页`}
             />
           ))}
         </div>
 
+        {!isPaginationExpanded && (
+          <div
+            className="flex flex-col items-center justify-center gap-1.5 py-1 px-0.5 transition-all duration-300"
+            aria-label={`第 ${currentPage + 1} 页，共 ${totalPages} 页`}
+          >
+            <span className={`text-[12px] font-black leading-none ${isLight ? 'text-slate-700' : 'text-white/90'}`}>
+              {currentPage + 1}
+            </span>
+            <div className={`w-3 h-[2px] rounded-full ${isLight ? 'bg-slate-300' : 'bg-white/20'}`} />
+            <span className={`text-[10px] font-bold leading-none ${isLight ? 'text-slate-400' : 'text-white/40'}`}>
+              {totalPages}
+            </span>
+          </div>
+        )}
+
         <button
           onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
           disabled={currentPage === totalPages - 1}
-          className={`p-2.5 rounded-full transition-all duration-300 ${isLight
+          className={`${isPaginationExpanded ? 'p-2.5 rounded-full' : 'hidden'} transition-all duration-300 ${isLight
             ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
             : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
             } border disabled:cursor-not-allowed active:scale-90`}
+          aria-label="下一页"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
       </div>
     );
@@ -277,7 +356,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   return (
     <div className={`w-full max-w-5xl flex flex-col gap-8 ${isPagination ? 'pb-4' : 'pb-10'}`}>
       {isPagination ? (
-        <div className="w-full">
+        <div className="w-full relative">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -312,7 +391,46 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
               )}
             </DragOverlay>
           </DndContext>
-          {renderPaginationControls()}
+          <div className="mt-8 flex md:hidden items-center justify-center gap-6 animate-fade-in">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isLight
+                ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
+                : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
+                } border disabled:cursor-not-allowed active:scale-90`}
+              aria-label="上一页"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+
+            <div className="flex gap-2.5">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={`h-2 rounded-full transition-all duration-500 ${currentPage === i
+                    ? (isLight ? 'bg-indigo-500 w-8' : 'bg-indigo-400 w-8')
+                    : (isLight ? 'bg-slate-300 w-2 hover:bg-slate-400' : 'bg-white/20 w-2 hover:bg-white/40')
+                    }`}
+                  aria-label={`第 ${i + 1} 页`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage === totalPages - 1}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isLight
+                ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
+                : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
+                } border disabled:cursor-not-allowed active:scale-90`}
+              aria-label="下一页"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+          {renderPaginationControls('hidden md:flex absolute left-full ml-4 top-1/2 -translate-y-1/2 z-20')}
         </div>
       ) : (
         filteredGroups.map((group) => {
