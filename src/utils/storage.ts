@@ -12,6 +12,7 @@ const isExtension = () => {
 // 内部常量：用于标识本地存储的图片数据
 const LOCAL_IMAGE_FLAG = '[LOCAL_IMAGE]';
 const IMAGE_STORAGE_KEY = 'newtab_custom_bg_data';
+const VIRTUAL_ALL_GROUP_ID = '__all__';
 
 // 加载设置
 export const loadSettings = async (): Promise<AppSettings> => {
@@ -45,6 +46,14 @@ export const loadSettings = async (): Promise<AppSettings> => {
       links: (settings as any).links
     }];
     delete (settings as any).links;
+  }
+
+  // 防止误将虚拟“所有链接”分组写入持久化数据
+  if (Array.isArray(settings.groups)) {
+    settings.groups = settings.groups.filter(group => group.id !== VIRTUAL_ALL_GROUP_ID);
+  }
+  if (!settings.groups || settings.groups.length === 0) {
+    settings.groups = DEFAULT_SETTINGS.groups;
   }
 
   // 处理分离存储的图片数据

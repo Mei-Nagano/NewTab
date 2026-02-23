@@ -67,7 +67,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
                 <h4 className={styles.sectionHeadingClass}>二维码生成</h4>
             </div>
             <div className={styles.cardClass}>
-                <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+                <div className="flex flex-row gap-8 items-start">
                     <div className="space-y-4 flex-1 w-full">
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -104,7 +104,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
                         </div>
                     </div>
                     <div className="flex flex-col items-center gap-4">
-                        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl md:w-64 md:h-64 shadow-sm border border-gray-100 flex-shrink-0">
+                        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl w-64 h-64 shadow-sm border border-gray-100 flex-shrink-0">
                             {qrCodeInput ? (
                                 <QRCodeCanvas id="qr-code-canvas" value={qrCodeInput} size={180} />
                             ) : (

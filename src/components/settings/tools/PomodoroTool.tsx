@@ -238,7 +238,7 @@ export const PomodoroTool: React.FC<ToolProps> = ({ theme, backgroundImage, sett
                         </div>
                         
                         <div className="flex flex-col items-center">
-                            <div className="text-[12rem] md:text-[15rem] leading-none font-bold text-white tracking-tighter drop-shadow-2xl font-mono select-none">
+                            <div className="text-[15rem] leading-none font-bold text-white tracking-tighter drop-shadow-2xl font-mono select-none">
                                 {formatTime(pomodoroTime)}
                             </div>
                             <div className="text-2xl font-medium text-white/60 uppercase tracking-[1em] mt-4 mb-16 select-none">

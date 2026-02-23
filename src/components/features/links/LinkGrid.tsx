@@ -1,21 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
 import {
   SortableContext,
   useSortable,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { LinkGroup, Theme, Link, LinkDisplayMode } from '../../../constants';
+import type { Link, LinkDisplayMode, LinkGroup, Theme } from '../../../constants';
 import { SiteIcon } from '../../common/SiteIcon';
 
 interface LinkGridProps {
@@ -23,7 +22,7 @@ interface LinkGridProps {
   theme: Theme;
   isEditMode?: boolean;
   linkDisplayMode?: LinkDisplayMode;
-  onReorderLinks?: (groupId: string, activeId: string, overId: string) => void;
+  onReorderLinks?: (groupId: string, activeId: string, overId: string, overGroupId?: string) => void;
   onLinkContextMenu?: (e: React.MouseEvent, link: Link, groupId: string) => void;
   onToggleCollapse?: (groupId: string) => void;
   onGroupContextMenu?: (e: React.MouseEvent, groupId: string) => void;
@@ -31,8 +30,15 @@ interface LinkGridProps {
   onDeleteLink?: (link: Link, groupId: string) => void;
 }
 
+interface LinkWithGroup extends Link {
+  groupId: string;
+}
 
-// 可拖拽的链接组件
+const ALL_GROUP_ID = '__all__';
+const PAGINATION_EDGE_TRIGGER_SIZE = 72;
+const PAGINATION_SWITCH_COOLDOWN = 450;
+const PAGINATION_EDGE_DWELL_MS = 300;
+
 const SortableLinkItem: React.FC<{
   link: Link;
   theme: Theme;
@@ -96,16 +102,14 @@ const SortableLinkItem: React.FC<{
         </span>
       </a>
 
-      {/* 删除按钮 - 仅在编辑模式显示 */}
       {isEditMode && !isDragging && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete?.();
           }}
-          className={`absolute -top-2 -right-2 z-20 p-1.5 rounded-full shadow-lg transition-transform hover:scale-110 ${isLight ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-500/80 text-white hover:bg-red-500'
-            }`}
-          title="删除"
+          className={`absolute -top-2 -right-2 z-20 p-1.5 rounded-full shadow-lg transition-transform hover:scale-110 ${isLight ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-500/80 text-white hover:bg-red-500'}`}
+          title="Delete link"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -117,7 +121,6 @@ const SortableLinkItem: React.FC<{
   );
 };
 
-// 普通链接组件（用于 DragOverlay）
 const LinkItemOverlay: React.FC<{ link: Link; theme: Theme }> = ({ link, theme }) => {
   const isLight = theme === 'light';
   const iconBgClass = isLight ? 'bg-white/90 shadow-sm border border-white/50' : 'bg-white/10 shadow-inner';
@@ -145,48 +148,45 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   linkDisplayMode = 'scroll',
   onReorderLinks,
   onLinkContextMenu,
-  onToggleCollapse,
   onGroupContextMenu,
   forceHideGroupNames = false,
   onDeleteLink,
 }) => {
   const [activeLink, setActiveLink] = useState<{ link: Link; groupId: string } | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(ALL_GROUP_ID);
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(24);
   const [isPaginationExpanded, setIsPaginationExpanded] = useState(true);
+
+  const paginationContainerRef = useRef<HTMLDivElement | null>(null);
+  const dragStartClientYRef = useRef<number | null>(null);
+  const lastAutoPageSwitchAtRef = useRef(0);
+  const edgeHoverStateRef = useRef<{ edge: 'top' | 'bottom' | null; enteredAt: number }>({
+    edge: null,
+    enteredAt: 0,
+  });
   const wheelDeltaRef = useRef(0);
   const collapseTimerRef = useRef<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 },
     })
   );
 
   const isLight = theme === 'light';
   const isPagination = linkDisplayMode === 'pagination';
 
-  // 计算每页显示数量
   useEffect(() => {
     if (!isPagination) return;
 
     const calculateLayout = () => {
-      const vw = window.innerWidth;
       const vh = window.innerHeight;
+      const cols = 8;
 
-      // 计算列数 (和 Tailwind 的 grid-cols 一致)
-      let cols = 4;
-      if (vw >= 1280) cols = 8;
-      else if (vw >= 1024) cols = 6;
-      else if (vw >= 768) cols = 5;
-
-      // 估算头部占比 (Clock + Search + Padding + Pagination Controls)
-      const overhead = 420; // Increased overhead safety
+      const overhead = 420;
       const availableHeight = vh - overhead;
-      const itemHeight = 130; // Increased item height safety
+      const itemHeight = 130;
 
       const rows = Math.max(1, Math.floor(availableHeight / itemHeight));
       setItemsPerPage(rows * cols);
@@ -197,10 +197,27 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
     return () => window.removeEventListener('resize', calculateLayout);
   }, [isPagination]);
 
-  // 当页码超出总页数时重置 (例如删除链接后)
   const filteredGroups = groups.filter(group => group.links.length > 0);
-  const allLinks = filteredGroups.flatMap(g => g.links.map(l => ({ ...l, groupId: g.id })));
-  const totalPages = Math.ceil(allLinks.length / itemsPerPage);
+  const selectedGroups = selectedGroupId === ALL_GROUP_ID
+    ? filteredGroups
+    : filteredGroups.filter(group => group.id === selectedGroupId);
+  const selectedLinks: LinkWithGroup[] = selectedGroups.flatMap(group =>
+    group.links.map(link => ({ ...link, groupId: group.id }))
+  );
+  const linkGroupIdById = new Map(selectedLinks.map(link => [link.id, link.groupId]));
+  const totalPages = Math.ceil(selectedLinks.length / itemsPerPage);
+  const totalLinkCount = filteredGroups.reduce((total, group) => total + group.links.length, 0);
+
+  useEffect(() => {
+    if (selectedGroupId === ALL_GROUP_ID) return;
+    if (!filteredGroups.some(group => group.id === selectedGroupId)) {
+      setSelectedGroupId(ALL_GROUP_ID);
+    }
+  }, [filteredGroups, selectedGroupId]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedGroupId]);
 
   const clearCollapseTimer = () => {
     if (collapseTimerRef.current !== null) {
@@ -208,6 +225,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
       collapseTimerRef.current = null;
     }
   };
+
   const schedulePaginationCollapse = () => {
     clearCollapseTimer();
     collapseTimerRef.current = window.setTimeout(() => {
@@ -219,7 +237,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
     if (currentPage >= totalPages && totalPages > 0) {
       setCurrentPage(totalPages - 1);
     }
-  }, [allLinks.length, totalPages, currentPage]);
+  }, [selectedLinks.length, totalPages, currentPage]);
 
   useEffect(() => {
     if (!isPagination || totalPages <= 1) {
@@ -227,8 +245,10 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
       setIsPaginationExpanded(true);
       return;
     }
+
     setIsPaginationExpanded(true);
     schedulePaginationCollapse();
+
     return () => {
       clearCollapseTimer();
     };
@@ -242,28 +262,115 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
     );
   }
 
-  // 分页数据切片
   const paginatedLinks = isPagination
-    ? allLinks.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
-    : [];
+    ? selectedLinks.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+    : selectedLinks;
 
-  const handleDragStart = (event: DragStartEvent, groupId: string, links: Link[]) => {
-    const link = links.find(l => l.id === event.active.id);
-    if (link) setActiveLink({ link, groupId });
+  const getClientYFromEvent = (event: Event | null): number | null => {
+    if (!event) return null;
+
+    if (typeof MouseEvent !== 'undefined' && event instanceof MouseEvent) {
+      return event.clientY;
+    }
+
+    return null;
   };
 
-  const handleDragEnd = (event: DragEndEvent, groupId: string) => {
-    const { active, over } = event;
-    setActiveLink(null);
-    if (over && active.id !== over.id && onReorderLinks) {
-      onReorderLinks(groupId, active.id as string, over.id as string);
+  const updatePaginationByDragY = (clientY: number) => {
+    if (!isPagination || !isEditMode || totalPages <= 1 || !activeLink) {
+      edgeHoverStateRef.current = { edge: null, enteredAt: 0 };
+      return;
     }
+
+    const container = paginationContainerRef.current;
+    if (!container) return;
+
+    const rect = container.getBoundingClientRect();
+    const triggerSize = Math.min(PAGINATION_EDGE_TRIGGER_SIZE, Math.max(36, Math.floor(rect.height * 0.14)));
+
+    let nextEdge: 'top' | 'bottom' | null = null;
+    if (clientY <= rect.top + triggerSize) {
+      nextEdge = 'top';
+    } else if (clientY >= rect.bottom - triggerSize) {
+      nextEdge = 'bottom';
+    }
+
+    if (!nextEdge) {
+      edgeHoverStateRef.current = { edge: null, enteredAt: 0 };
+      return;
+    }
+
+    const now = Date.now();
+    if (edgeHoverStateRef.current.edge !== nextEdge) {
+      edgeHoverStateRef.current = { edge: nextEdge, enteredAt: now };
+      return;
+    }
+
+    if (now - edgeHoverStateRef.current.enteredAt < PAGINATION_EDGE_DWELL_MS) {
+      return;
+    }
+
+    if (now - lastAutoPageSwitchAtRef.current < PAGINATION_SWITCH_COOLDOWN) {
+      return;
+    }
+
+    if (nextEdge === 'top' && currentPage > 0) {
+      setCurrentPage(p => Math.max(0, p - 1));
+      lastAutoPageSwitchAtRef.current = now;
+      return;
+    }
+
+    if (nextEdge === 'bottom' && currentPage < totalPages - 1) {
+      setCurrentPage(p => Math.min(totalPages - 1, p + 1));
+      lastAutoPageSwitchAtRef.current = now;
+    }
+  };
+
+  const handleDragStart = (event: DragStartEvent, links: LinkWithGroup[]) => {
+    const link = links.find(item => item.id === event.active.id);
+    if (link) {
+      setActiveLink({ link, groupId: link.groupId });
+    }
+
+    dragStartClientYRef.current = getClientYFromEvent(event.activatorEvent as Event);
+    lastAutoPageSwitchAtRef.current = 0;
+    edgeHoverStateRef.current = { edge: null, enteredAt: 0 };
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    setActiveLink(null);
+    dragStartClientYRef.current = null;
+    edgeHoverStateRef.current = { edge: null, enteredAt: 0 };
+
+    if (!activeLink || !over || active.id === over.id || !onReorderLinks) return;
+
+    const overId = over.id as string;
+    onReorderLinks(activeLink.groupId, active.id as string, overId, linkGroupIdById.get(overId));
+  };
+
+  const handleDragCancel = () => {
+    setActiveLink(null);
+    dragStartClientYRef.current = null;
+    edgeHoverStateRef.current = { edge: null, enteredAt: 0 };
+  };
+
+  const handlePaginationDragMove = (event: DragMoveEvent) => {
+    if (!isPagination || !isEditMode || !activeLink) return;
+
+    const startY = dragStartClientYRef.current;
+    if (startY === null) return;
+
+    updatePaginationByDragY(startY + event.delta.y);
   };
 
   const handlePaginationWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (!isPagination || totalPages <= 1) return;
+
     e.preventDefault();
     wheelDeltaRef.current += e.deltaY;
+
     const threshold = 40;
     if (wheelDeltaRef.current >= threshold) {
       setCurrentPage(p => Math.min(totalPages - 1, p + 1));
@@ -289,13 +396,12 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
 
     return (
       <div
-        onWheel={handlePaginationWheel}
         onMouseEnter={handlePaginationMouseEnter}
         onMouseLeave={handlePaginationMouseLeave}
         className={`flex flex-col items-center animate-fade-in transition-all duration-300 ${className ?? ''} ${isLight
           ? 'bg-white/35 border-white/50'
           : 'bg-black/20 border-white/10'
-          } backdrop-blur-md border ${isPaginationExpanded ? 'gap-4 rounded-2xl px-2.5 py-3' : 'gap-2 rounded-full px-2 py-2.5'}`}
+          } backdrop-blur-md border rounded-2xl ${isPaginationExpanded ? 'gap-4 px-2.5 py-3' : 'gap-2 px-2 py-2.5'}`}
       >
         <button
           onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
@@ -304,7 +410,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
             ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
             : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
             } border disabled:cursor-not-allowed active:scale-90`}
-          aria-label="上一页"
+          aria-label="Previous page"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
         </button>
@@ -318,7 +424,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
                 ? (isLight ? 'bg-indigo-500 h-7 w-2.5' : 'bg-indigo-400 h-7 w-2.5')
                 : (isLight ? 'bg-slate-300 h-2 w-2 hover:bg-slate-400' : 'bg-white/20 h-2 w-2 hover:bg-white/40')
                 }`}
-              aria-label={`第 ${i + 1} 页`}
+              aria-label={`Page ${i + 1}`}
             />
           ))}
         </div>
@@ -326,7 +432,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
         {!isPaginationExpanded && (
           <div
             className="flex flex-col items-center justify-center gap-1.5 py-1 px-0.5 transition-all duration-300"
-            aria-label={`第 ${currentPage + 1} 页，共 ${totalPages} 页`}
+            aria-label={`Page ${currentPage + 1} of ${totalPages}`}
           >
             <span className={`text-[12px] font-black leading-none ${isLight ? 'text-slate-700' : 'text-white/90'}`}>
               {currentPage + 1}
@@ -345,7 +451,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
             ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
             : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
             } border disabled:cursor-not-allowed active:scale-90`}
-          aria-label="下一页"
+          aria-label="Next page"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
@@ -353,26 +459,77 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
     );
   };
 
+  const renderDesktopGroupControls = (className?: string) => {
+    if (forceHideGroupNames) return null;
+
+    return (
+      <div
+        className={`flex flex-col items-stretch gap-2 p-2 max-h-[48vh] overflow-y-auto animate-fade-in transition-all duration-300 ${className ?? ''} ${isLight
+          ? 'bg-white/35 border-white/50'
+          : 'bg-black/20 border-white/10'
+          } backdrop-blur-md border rounded-2xl`}
+      >
+        <button
+          onClick={() => setSelectedGroupId(ALL_GROUP_ID)}
+          className={`inline-flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-bold tracking-wide transition-all ${selectedGroupId === ALL_GROUP_ID
+            ? (isLight
+              ? 'bg-indigo-500 border-indigo-500 text-white'
+              : 'bg-indigo-500/35 border-indigo-400/60 text-white')
+            : (isLight
+              ? 'bg-white/55 border-white text-slate-600 hover:bg-white/80'
+              : 'bg-white/5 border-white/10 text-white/65 hover:bg-white/10')
+            }`}
+          title="All links (default group)"
+        >
+          <span className="truncate">All links</span>
+          <span className={`${selectedGroupId === ALL_GROUP_ID ? 'text-white/90' : (isLight ? 'text-slate-500' : 'text-white/35')}`}>({totalLinkCount})</span>
+        </button>
+
+        {filteredGroups.map((group) => (
+          <button
+            key={group.id}
+            onClick={() => setSelectedGroupId(group.id)}
+            onContextMenu={(e) => onGroupContextMenu?.(e, group.id)}
+            className={`inline-flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-bold tracking-wide transition-all ${selectedGroupId === group.id
+              ? (isLight
+                ? 'bg-indigo-500 border-indigo-500 text-white'
+                : 'bg-indigo-500/35 border-indigo-400/60 text-white')
+              : (isLight
+                ? 'bg-white/55 border-white text-slate-600 hover:bg-white/80'
+                : 'bg-white/5 border-white/10 text-white/65 hover:bg-white/10')
+              }`}
+            title={group.title}
+          >
+            <span className="truncate">{group.title}</span>
+            <span className={`${selectedGroupId === group.id ? 'text-white/90' : (isLight ? 'text-slate-500' : 'text-white/35')}`}>({group.links.length})</span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+
   return (
     <div className={`w-full max-w-5xl flex flex-col gap-8 ${isPagination ? 'pb-4' : 'pb-10'}`}>
       {isPagination ? (
-        <div className="w-full relative">
+        <div
+          ref={paginationContainerRef}
+          onWheel={handlePaginationWheel}
+          className="w-full relative"
+        >
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragStart={(e) => {
-              const link = paginatedLinks.find(l => l.id === e.active.id);
-              if (link) setActiveLink({ link, groupId: link.groupId });
-            }}
-            onDragEnd={(e) => {
-              if (activeLink) handleDragEnd(e, activeLink.groupId);
-            }}
+            onDragStart={(e) => handleDragStart(e, paginatedLinks)}
+            onDragMove={handlePaginationDragMove}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
           >
             <SortableContext
               items={paginatedLinks.map(l => l.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4 min-h-[100px]">
+              <div className="grid grid-cols-8 gap-4 min-h-[100px]">
                 {paginatedLinks.map((link) => (
                   <SortableLinkItem
                     key={link.id}
@@ -391,124 +548,47 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
               )}
             </DragOverlay>
           </DndContext>
-          <div className="mt-8 flex md:hidden items-center justify-center gap-6 animate-fade-in">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isLight
-                ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
-                : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
-                } border disabled:cursor-not-allowed active:scale-90`}
-              aria-label="上一页"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            </button>
 
-            <div className="flex gap-2.5">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i)}
-                  className={`h-2 rounded-full transition-all duration-500 ${currentPage === i
-                    ? (isLight ? 'bg-indigo-500 w-8' : 'bg-indigo-400 w-8')
-                    : (isLight ? 'bg-slate-300 w-2 hover:bg-slate-400' : 'bg-white/20 w-2 hover:bg-white/40')
-                    }`}
-                  aria-label={`第 ${i + 1} 页`}
-                />
-              ))}
-            </div>
 
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage === totalPages - 1}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isLight
-                ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
-                : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20'
-                } border disabled:cursor-not-allowed active:scale-90`}
-              aria-label="下一页"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
-          </div>
-          {renderPaginationControls('hidden md:flex absolute left-full ml-4 top-1/2 -translate-y-1/2 z-20')}
+
+          {renderDesktopGroupControls('absolute right-full mr-4 top-1/2 -translate-y-1/2 z-20')}
+          {renderPaginationControls('absolute left-full ml-4 top-1/2 -translate-y-1/2 z-20')}
         </div>
       ) : (
-        filteredGroups.map((group) => {
-          const showTitle = !forceHideGroupNames && group.showTitle !== false;
-          const isCollapsed = group.collapsed === true;
+        <div className="w-full relative animate-slide-up">
+          {renderDesktopGroupControls('absolute right-full mr-4 top-1/2 -translate-y-1/2 z-20')}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={(e) => handleDragStart(e, selectedLinks)}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <SortableContext
+              items={selectedLinks.map(link => link.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-8 gap-4">
+                {selectedLinks.map((link) => (
+                  <SortableLinkItem
+                    key={link.id}
+                    link={link}
+                    theme={theme}
+                    isEditMode={isEditMode}
+                    onContextMenu={(e) => onLinkContextMenu?.(e, link, link.groupId)}
+                    onDelete={() => onDeleteLink?.(link, link.groupId)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
 
-          return (
-            <div key={group.id} className="w-full animate-slide-up">
-              {/* 分组标题 - 美化版 */}
-              {showTitle && (
-                <div
-                  onClick={() => onToggleCollapse?.(group.id)}
-                  onContextMenu={(e) => onGroupContextMenu?.(e, group.id)}
-                  className={`inline-flex items-center gap-2.5 mb-4 px-4 py-2 rounded-xl cursor-pointer transition-all select-none border ${isLight
-                    ? 'bg-white/40 hover:bg-white/60 backdrop-blur-md border-white/40 text-slate-600 hover:text-slate-800'
-                    : 'bg-white/5 hover:bg-white/10 backdrop-blur-sm border-white/5 text-white/50 hover:text-white/70'
-                    }`}
-                >
-                  {/* 折叠箭头 */}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`transition-transform duration-200 ${isLight ? 'text-slate-400' : 'text-white/30'} ${isCollapsed ? '-rotate-90' : ''}`}
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span className={`text-xs font-bold tracking-wide uppercase`}>
-                    {group.title}
-                  </span>
-                  <span className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-white/30'}`}>
-                    ({group.links.length})
-                  </span>
-                </div>
+            <DragOverlay>
+              {activeLink && (
+                <LinkItemOverlay link={activeLink.link} theme={theme} />
               )}
-
-              {/* 链接网格 - 折叠时隐藏 */}
-              {!isCollapsed && (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={(e) => handleDragStart(e, group.id, group.links)}
-                  onDragEnd={(e) => handleDragEnd(e, group.id)}
-                >
-                  <SortableContext
-                    items={group.links.map(l => l.id)}
-                    strategy={rectSortingStrategy}
-                  >
-                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                      {group.links.map((link) => (
-                        <SortableLinkItem
-                          key={link.id}
-                          link={link}
-                          theme={theme}
-                          isEditMode={isEditMode}
-                          onContextMenu={(e) => onLinkContextMenu?.(e, link, group.id)}
-                          onDelete={() => onDeleteLink?.(link, group.id)}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-
-                  <DragOverlay>
-                    {activeLink && activeLink.groupId === group.id && (
-                      <LinkItemOverlay link={activeLink.link} theme={theme} />
-                    )}
-                  </DragOverlay>
-                </DndContext>
-              )}
-            </div>
-          );
-        })
+            </DragOverlay>
+          </DndContext>
+        </div>
       )}
     </div>
   );

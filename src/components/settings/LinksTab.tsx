@@ -28,6 +28,9 @@ interface LinksTabProps {
     theme: 'light' | 'dark';
 }
 
+const ALL_GROUP_ID = '__all__';
+const ALL_GROUP_TITLE = '所有链接';
+
 export const LinksTab: React.FC<LinksTabProps> = ({
     settings,
     onSettingsChange,
@@ -79,16 +82,20 @@ export const LinksTab: React.FC<LinksTabProps> = ({
         })
     );
 
-    const activeGroup = settings.groups.find(g => g.id === activeGroupId) || settings.groups[0];
+    const isAllGroupSelected = activeGroupId === ALL_GROUP_ID;
+    const allGroupLinks = settings.groups.flatMap(group => group.links);
+    const activeGroup = isAllGroupSelected
+        ? { id: ALL_GROUP_ID, title: ALL_GROUP_TITLE, links: allGroupLinks }
+        : (settings.groups.find(g => g.id === activeGroupId) || settings.groups[0]);
 
     useEffect(() => {
         if (activeGroup) {
-            setEditingGroupTitle(activeGroup.title);
+            setEditingGroupTitle(isAllGroupSelected ? ALL_GROUP_TITLE : activeGroup.title);
             setSelectedLinkIds(new Set());
             setEditingLinkId(null);
             setNewLink({ title: '', url: '', icon: '' });
         }
-    }, [activeGroup?.id]);
+    }, [activeGroup?.id, isAllGroupSelected]);
 
     // Group Handlers
     const addGroup = () => {
@@ -102,6 +109,15 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const deleteGroup = (id: string) => {
+        if (id === ALL_GROUP_ID || isAllGroupSelected) {
+            setAlertDialog({
+                isOpen: true,
+                title: '无法删除',
+                message: '“所有链接”是默认分组视图，不能删除。'
+            });
+            return;
+        }
+
         if (settings.groups.length <= 1) {
             setAlertDialog({
                 isOpen: true,
@@ -127,6 +143,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const updateGroupTitle = (id: string, newTitle: string) => {
+        if (id === ALL_GROUP_ID) return;
         onSettingsChange({
             ...settings,
             groups: settings.groups.map(g => g.id === id ? { ...g, title: newTitle } : g)
@@ -135,6 +152,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
 
     // Link Handlers
     const handleLinkSubmit = () => {
+        if (isAllGroupSelected) return;
         if (!newLink.title || !newLink.url) return;
 
         let url = newLink.url;
@@ -170,6 +188,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const removeLink = (linkId: string) => {
+        if (isAllGroupSelected) return;
         if (editingLinkId === linkId) {
             setNewLink({ title: '', url: '', icon: '' });
             setEditingLinkId(null);
@@ -183,6 +202,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const startEditLink = (link: Link) => {
+        if (isAllGroupSelected) return;
         setNewLink({ title: link.title, url: link.url, icon: link.icon || '' });
         setEditingLinkId(link.id);
         // Scroll to form if needed
@@ -197,6 +217,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const deleteSelectedLinks = () => {
+        if (isAllGroupSelected) return;
         if (selectedLinkIds.size === 0) return;
 
         setConfirmDialog({
@@ -218,6 +239,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     };
 
     const handleLinkDragEnd = (event: DragEndEvent) => {
+        if (isAllGroupSelected) return;
         const { active, over } = event;
         if (over && active.id !== over.id && activeGroupId) {
             onSettingsChange({
@@ -235,6 +257,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
 
     const toggleSelectAllGroupLinks = () => {
         if (!activeGroup) return;
+        if (isAllGroupSelected) return;
         if (selectedLinkIds.size === activeGroup.links.length && activeGroup.links.length > 0) {
             setSelectedLinkIds(new Set());
         } else {
@@ -281,6 +304,21 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                                 {isGroupDropdownOpen && (
                                     <div className={`absolute top-full left-0 right-0 mt-2 z-50 border rounded-2xl shadow-2xl overflow-hidden animate-scale-in origin-top ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-[#1a1b1e] border-white/10'}`}>
                                         <div className="p-1.5 max-h-60 overflow-y-auto custom-scrollbar">
+                                            <button
+                                                onClick={() => {
+                                                    setActiveGroupId(ALL_GROUP_ID);
+                                                    setIsGroupDropdownOpen(false);
+                                                }}
+                                                className={`w-full group text-left px-4 py-3 text-sm rounded-xl transition-all flex items-center justify-between ${isAllGroupSelected
+                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                                    : (theme === 'light' ? 'text-gray-700 hover:bg-gray-50' : 'text-gray-300 hover:bg-white/5 hover:text-white')
+                                                    }`}
+                                            >
+                                                <span className="font-bold">{ALL_GROUP_TITLE}</span>
+                                                <span className={`text-xs ${isAllGroupSelected ? 'text-white/90' : (theme === 'light' ? 'text-gray-400' : 'text-gray-500')}`}>
+                                                    ({allGroupLinks.length})
+                                                </span>
+                                            </button>
                                             {settings.groups.map(g => (
                                                 <button
                                                     key={g.id}
@@ -308,7 +346,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                                 <button onClick={addGroup} className={`p-4 rounded-2xl border transition-all ${theme === 'light' ? 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200' : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`} title="新建分组">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
-                                <button onClick={() => deleteGroup(activeGroupId)} className={`p-4 rounded-2xl border transition-all ${theme === 'light' ? 'bg-white border-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300'}`} title="删除当前分组">
+                                <button onClick={() => deleteGroup(activeGroupId)} disabled={isAllGroupSelected} className={`p-4 rounded-2xl border transition-all ${theme === 'light' ? 'bg-white border-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200' : 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300'}`} title="删除当前分组">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                                 </button>
                             </div>
@@ -330,6 +368,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                                         setEditingGroupTitle(e.target.value);
                                         updateGroupTitle(activeGroupId, e.target.value);
                                     }}
+                                    disabled={isAllGroupSelected}
                                     className={`flex-1 bg-transparent border-none p-0 text-sm font-bold outline-none placeholder-gray-500 ${theme === 'light' ? 'text-gray-900' : 'text-white'}`}
                                     placeholder="重命名分组..."
                                 />
@@ -337,7 +376,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
 
                             <button
                                 onClick={onStartImport}
-                                disabled={isFetchingBookmarks}
+                                disabled={isFetchingBookmarks || isAllGroupSelected}
                                 className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all border flex items-center gap-2.5 ${theme === 'light'
                                     ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20'
                                     : 'bg-white/10 text-white border-transparent hover:bg-white/20'
@@ -459,8 +498,8 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                                 ) : (
                                     <button
                                         onClick={handleLinkSubmit}
-                                        disabled={!newLink.title || !newLink.url}
-                                        className={`px-10 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg flex items-center gap-2 ${(!newLink.title || !newLink.url)
+                                        disabled={isAllGroupSelected || !newLink.title || !newLink.url}
+                                        className={`px-10 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg flex items-center gap-2 ${(isAllGroupSelected || !newLink.title || !newLink.url)
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50 shadow-none'
                                             : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 hover:-translate-y-0.5'}`}
                                     >
@@ -485,7 +524,7 @@ export const LinksTab: React.FC<LinksTabProps> = ({
                         </span>
                     </div>
 
-                    {activeGroup.links.length > 0 && !editingLinkId && (
+                    {activeGroup.links.length > 0 && !editingLinkId && !isAllGroupSelected && (
                         <div className="flex items-center gap-3 animate-fade-in">
                             <button
                                 onClick={toggleSelectAllGroupLinks}

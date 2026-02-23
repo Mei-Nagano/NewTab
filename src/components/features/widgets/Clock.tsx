@@ -42,7 +42,7 @@ export const Clock: React.FC<ClockProps> = ({ showTime = true, showDate = true, 
     >
       {showTime && (
         <div className="relative">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-extralight tracking-tight leading-none tabular-nums font-mono">
+          <h1 className="text-8xl font-extralight tracking-tight leading-none tabular-nums font-mono">
             {formatTime(time)}
           </h1>
         </div>

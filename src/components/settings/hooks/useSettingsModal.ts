@@ -5,6 +5,7 @@ import { getBrowserBookmarks, exportSettingsToFile, importSettingsFromFile } fro
 import { backupToWebDav, restoreFromWebDav } from '../../../utils/webdav';
 
 declare const chrome: any;
+const ALL_GROUP_ID = '__all__';
 
 interface UseSettingsModalProps {
     isOpen: boolean;
@@ -254,7 +255,9 @@ export const useSettingsModal = ({ isOpen, settings, onSave, onClose }: UseSetti
         });
     };
 
-    const activeGroupTitle = tempSettings.groups.find(g => g.id === activeGroupId)?.title || '未选择分组';
+    const activeGroupTitle = activeGroupId === ALL_GROUP_ID
+        ? '所有链接'
+        : (tempSettings.groups.find(g => g.id === activeGroupId)?.title || '未选择分组');
 
     return {
         activeTab,

@@ -86,7 +86,7 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ theme, backgroundImage, sett
             </style>
             
             {/* Tool Selector - Optimized Card Style */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-3">
                 {toolTabs.map(tab => {
                     const isActive = activeTool === tab.id;
                     const colorStyles = {

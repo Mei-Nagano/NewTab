@@ -8,7 +8,7 @@ import { LinkEditDialog } from './components/features/links/LinkEditDialog';
 import { GroupEditDialog } from './components/features/links/GroupEditDialog';
 import { ConfirmDialog } from './components/common/ConfirmDialog';
 import { loadSettings, saveSettings, fetchBingWallpaper, fetchRandomWallpaper } from './utils/storage';
-import { reorderLinksInGroup } from './utils/sortUtils';
+import { reorderLinksAcrossGroups, reorderLinksInGroup } from './utils/sortUtils';
 import { type AppSettings, type Link, type HideOptions, DEFAULT_SETTINGS } from './constants';
 
 export default function App() {
@@ -92,8 +92,11 @@ export default function App() {
   };
 
   // 处理链接拖拽排序
-  const handleReorderLinks = async (groupId: string, activeId: string, overId: string) => {
-    const newGroups = reorderLinksInGroup(settings.groups, groupId, activeId, overId);
+  const handleReorderLinks = async (groupId: string, activeId: string, overId: string, overGroupId?: string) => {
+    const shouldCrossGroupReorder = !!overGroupId && overGroupId !== groupId;
+    const newGroups = settings.linkDisplayMode === 'pagination' || shouldCrossGroupReorder
+      ? reorderLinksAcrossGroups(settings.groups, activeId, overId)
+      : reorderLinksInGroup(settings.groups, groupId, activeId, overId);
     const newSettings = { ...settings, groups: newGroups };
     setSettings(newSettings);
     await saveSettings(newSettings);
