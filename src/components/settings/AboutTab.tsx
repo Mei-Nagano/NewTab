@@ -30,7 +30,7 @@ export const AboutTab: React.FC<AboutTabProps> = ({ theme, onUpdateStatusChange 
                 if (info.error) onUpdateStatusChange('error');
                 else onUpdateStatusChange(info.hasUpdate ? 'outdated' : 'latest');
             }
-        } catch (e) {
+        } catch {
             setCheckStatus('error');
             if (onUpdateStatusChange) onUpdateStatusChange('error');
         }

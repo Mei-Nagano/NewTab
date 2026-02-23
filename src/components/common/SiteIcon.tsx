@@ -51,7 +51,7 @@ export const SiteIcon: React.FC<{
                 if (apiSource !== cached) sources.push(apiSource);
                 const originSource = `${urlObj.origin}/favicon.ico`;
                 if (originSource !== cached && originSource !== apiSource) sources.push(originSource);
-            } catch (e) { /* invalid URL */ }
+            } catch { /* invalid URL */ }
 
             return sources;
         };

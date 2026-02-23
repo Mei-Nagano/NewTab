@@ -49,7 +49,7 @@ export const getDominantBrightness = (imageUrl: string): Promise<'light' | 'dark
         // 因为白色文字配合阴影在复杂背景上通常更易读
         resolve(avgBrightness > 180 ? 'light' : 'dark');
 
-      } catch (e) {
+      } catch {
         // CORS错误时的降级处理
         resolve('dark');
       }
