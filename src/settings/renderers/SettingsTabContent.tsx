@@ -1,5 +1,5 @@
 import { AboutTab } from '@/settings/about/AboutTab';
-import { BackupTab } from '@/settings/backup/BackupTab';
+import { BackupTab } from '@/settings/recovery/BackupTab';
 import { GeneralTab } from '@/settings/general/GeneralTab';
 import { LinksTab } from '@/settings/links/LinksTab';
 import { ToolsTab } from '@/settings/tools/ToolsTab';
