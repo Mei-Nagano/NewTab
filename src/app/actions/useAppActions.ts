@@ -1,5 +1,5 @@
-import type { ContextMenuState } from '@/components/ContextMenu';
-import { reorderLinksAcrossGroups, reorderLinksInGroup } from '@/utils/sortUtils';
+import type { ContextMenuState } from '@/context-menu';
+import { reorderLinksAcrossGroups, reorderLinksInGroup } from '@/shared/utils';
 import { saveSettings } from '@/services/storage';
 import type { AppSettings, HideOptions, Link, Theme } from '@/types';
 import type { ReorderPayload } from '@/features/links/grid/types';

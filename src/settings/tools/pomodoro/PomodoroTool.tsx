@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { getCommonStyles } from '@/components/settings/tools/shared';
+import { getCommonStyles } from '@/settings/tools/common/shared';
 import { DEFAULT_POMODORO } from '@/constants';
 import type { AppSettings, PomodoroSettings } from '@/types';
 import { PomodoroControls } from './components/PomodoroControls';

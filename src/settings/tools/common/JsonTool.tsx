@@ -12,6 +12,8 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
     const [jsonFormatMode, setJsonFormatMode] = useState<'pretty' | 'minified'>('pretty');
 
     const styles = getCommonStyles(theme);
+    const labelClass = `text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-500'}`;
+    const toggleIdleClass = theme === 'light' ? 'text-gray-600 hover:text-gray-800' : 'text-gray-500 hover:text-gray-300';
 
     const handleJsonFormat = () => {
         try {
@@ -38,13 +40,13 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                            <label className="text-xs font-medium text-gray-500">JSON 内容</label>
+                            <label className={labelClass}>JSON 内容</label>
                             <div className={`flex p-0.5 rounded-lg border transition-all ${theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-white/5 border-white/5'}`}>
                                 <button 
                                     onClick={() => setJsonFormatMode('pretty')}
                                     className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${jsonFormatMode === 'pretty' 
                                         ? (theme === 'light' ? 'bg-white text-blue-600 shadow-sm' : 'bg-white/10 text-blue-400') 
-                                        : 'text-gray-500 hover:text-gray-700'}`}
+                                        : toggleIdleClass}`}
                                 >
                                     美化
                                 </button>
@@ -52,7 +54,7 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
                                     onClick={() => setJsonFormatMode('minified')}
                                     className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all ${jsonFormatMode === 'minified' 
                                         ? (theme === 'light' ? 'bg-white text-blue-600 shadow-sm' : 'bg-white/10 text-blue-400') 
-                                        : 'text-gray-500 hover:text-gray-700'}`}
+                                        : toggleIdleClass}`}
                                 >
                                     最简
                                 </button>
@@ -68,7 +70,7 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
                     
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                            <label className="text-xs font-medium text-gray-500">格式化结果</label>
+                            <label className={labelClass}>格式化结果</label>
                         </div>
                         <textarea
                             readOnly

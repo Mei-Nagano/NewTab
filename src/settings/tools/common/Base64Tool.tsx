@@ -11,6 +11,7 @@ export const Base64Tool: React.FC<ToolProps> = ({ theme }) => {
     const [base64Error, setBase64Error] = useState('');
 
     const styles = getCommonStyles(theme);
+    const labelClass = `text-xs font-medium ml-1 ${theme === 'light' ? 'text-gray-700' : 'text-gray-500'}`;
 
     const handleBase64Encode = () => {
         try {
@@ -39,7 +40,7 @@ export const Base64Tool: React.FC<ToolProps> = ({ theme }) => {
             <div className={styles.cardClass}>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 ml-1">输入</label>
+                        <label className={labelClass}>输入</label>
                         <textarea
                             value={base64Input}
                             onChange={(e) => setBase64Input(e.target.value)}
@@ -48,7 +49,7 @@ export const Base64Tool: React.FC<ToolProps> = ({ theme }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 ml-1">输出</label>
+                        <label className={labelClass}>输出</label>
                         <textarea
                             readOnly
                             value={base64Output}

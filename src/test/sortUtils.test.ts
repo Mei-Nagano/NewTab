@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LinkGroup } from '@/types';
-import { reorderItems, reorderLinksAcrossGroups, reorderLinksInGroup } from '@/utils/sortUtils';
+import { reorderItems, reorderLinksAcrossGroups, reorderLinksInGroup } from '@/shared/utils';
 
 describe('sortUtils', () => {
   it('reorderItems should move item within array', () => {

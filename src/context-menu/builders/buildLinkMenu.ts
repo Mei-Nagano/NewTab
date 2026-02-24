@@ -1,4 +1,4 @@
-import type { MenuItem } from '@/components/ContextMenu/types';
+import type { MenuItem } from '@/context-menu/types';
 import type { LinkMenuBuilderContext } from './types';
 
 export const buildLinkMenu = ({

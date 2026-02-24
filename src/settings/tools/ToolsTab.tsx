@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { QrCode, Timer } from 'lucide-react';
-import type { AppSettings } from '../../constants';
-import { Base64Tool } from './tools/Base64Tool';
-import { TimestampTool } from './tools/TimestampTool';
-import { JsonTool } from './tools/JsonTool';
-import { QrCodeTool } from './tools/QrCodeTool';
-import { PomodoroTool } from './tools/PomodoroTool';
+import type { AppSettings } from '@/constants';
+import { Base64Tool } from './common/Base64Tool';
+import { TimestampTool } from './common/TimestampTool';
+import { JsonTool } from './common/JsonTool';
+import { QrCodeTool } from './common/QrCodeTool';
+import { PomodoroTool } from './pomodoro/PomodoroTool';
 
 interface ToolsTabProps {
     theme: 'light' | 'dark';

@@ -1,5 +1,5 @@
 import type { HideOptions } from '@/types';
-import type { ContextMenuProps, MenuItem } from '@/components/ContextMenu/types';
+import type { ContextMenuProps, MenuItem } from '@/context-menu/types';
 
 export interface BlankMenuBuilderContext {
   isLight: boolean;

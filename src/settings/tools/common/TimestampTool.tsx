@@ -11,6 +11,8 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
     const [tsOutput, setTsOutput] = useState('');
 
     const styles = getCommonStyles(theme);
+    const hintTextClass = `text-xs font-medium ${theme === 'light' ? 'text-gray-700' : 'text-gray-500'}`;
+    const copyButtonClass = `absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg ${theme === 'light' ? 'hover:bg-black/5 text-gray-500' : 'hover:bg-white/10 text-gray-400'}`;
 
     // Update current timestamp
     useEffect(() => {
@@ -60,7 +62,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
             <div className={styles.cardClass}>
                 <div className="flex items-center justify-between mb-6 p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
                     <div className="space-y-1">
-                        <span className="text-xs text-gray-500 font-medium">当前 Unix 时间戳 (秒)</span>
+                        <span className={hintTextClass}>当前 Unix 时间戳 (秒)</span>
                         <div className="text-2xl font-mono font-bold text-orange-500 tracking-wider">
                             {currentTimestamp}
                         </div>
@@ -75,7 +77,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 ml-1">转换工具</label>
+                        <label className={`${hintTextClass} ml-1`}>转换工具</label>
                         <input
                             type="text"
                             value={tsInput}
@@ -85,7 +87,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 ml-1">结果</label>
+                        <label className={`${hintTextClass} ml-1`}>结果</label>
                         <div className="relative">
                             <input
                                 readOnly
@@ -96,7 +98,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
                             {tsOutput && (
                                 <button
                                     onClick={() => copyToClipboard(tsOutput)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 text-gray-400"
+                                    className={copyButtonClass}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                 </button>

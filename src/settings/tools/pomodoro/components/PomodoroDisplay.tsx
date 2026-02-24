@@ -1,4 +1,4 @@
-type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
+﻿type PomodoroMode = 'work' | 'shortBreak' | 'longBreak';
 
 interface PomodoroDisplayProps {
   theme: 'light' | 'dark';
@@ -22,6 +22,12 @@ export const PomodoroDisplay: React.FC<PomodoroDisplayProps> = ({
   duration,
   onDurationChange,
 }) => {
+  const hintClass = theme === 'light' ? 'text-gray-700' : 'text-gray-500';
+  const inputClass =
+    theme === 'light'
+      ? 'bg-white border-gray-300 text-gray-900'
+      : 'bg-white/5 border-white/10 text-white';
+
   return (
     <>
       <div className="relative mb-8">
@@ -35,16 +41,16 @@ export const PomodoroDisplay: React.FC<PomodoroDisplayProps> = ({
 
       {!running && (
         <div className="mb-8 flex items-center gap-2">
-          <span className="text-xs text-gray-500">当前模式时长(分钟):</span>
+          <span className={`text-xs ${hintClass}`}>当前模式时长(分钟):</span>
           <input
             type="number"
             min="1"
             max="120"
             value={duration}
-            onChange={(event) => onDurationChange(Math.max(1, parseInt(event.target.value || '1', 10)))}
-            className={`w-16 p-1 text-center text-sm rounded-lg border outline-none focus:ring-2 focus:ring-rose-500/20 ${
-              theme === 'light' ? 'bg-white border-gray-200' : 'bg-white/5 border-white/10 text-white'
-            }`}
+            onChange={(event) =>
+              onDurationChange(Math.max(1, parseInt(event.target.value || '1', 10)))
+            }
+            className={`w-16 p-1 text-center text-sm rounded-lg border outline-none focus:ring-2 focus:ring-rose-500/20 ${inputClass}`}
           />
         </div>
       )}

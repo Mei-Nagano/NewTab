@@ -1,4 +1,4 @@
-import { SettingsSidebar } from '@/components/settings/SettingsSidebar';
+import { SettingsSidebar } from './SettingsSidebar';
 
 interface SettingsFrameProps {
   theme: 'light' | 'dark';

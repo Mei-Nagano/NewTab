@@ -1,9 +1,9 @@
 import { useMemo, useRef } from 'react';
-import { ContextMenuItem } from '@/components/ContextMenu/ContextMenuItem';
-import { ContextMenuSeparator } from '@/components/ContextMenu/ContextMenuSeparator';
-import { SubMenu } from '@/components/ContextMenu/SubMenu';
-import type { ContextMenuProps, MenuItem } from '@/components/ContextMenu/types';
-import { useMenuPosition } from '@/components/ContextMenu/useMenuPosition';
+import { ContextMenuItem } from './components/ContextMenuItem';
+import { ContextMenuSeparator } from './components/ContextMenuSeparator';
+import { SubMenu } from './components/SubMenu';
+import type { ContextMenuProps, MenuItem } from './types';
+import { useMenuPosition } from './hooks/useMenuPosition';
 import { buildBlankMenu } from './builders/buildBlankMenu';
 import { buildGroupMenu } from './builders/buildGroupMenu';
 import { buildLinkMenu } from './builders/buildLinkMenu';

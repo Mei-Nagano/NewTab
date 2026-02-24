@@ -1,8 +1,8 @@
-import { AboutTab } from '@/components/settings/AboutTab';
-import { BackupTab } from '@/components/settings/BackupTab';
-import { GeneralTab } from '@/components/settings/GeneralTab';
-import { LinksTab } from '@/components/settings/LinksTab';
-import { ToolsTab } from '@/components/settings/ToolsTab';
+import { AboutTab } from '@/settings/about/AboutTab';
+import { BackupTab } from '@/settings/backup/BackupTab';
+import { GeneralTab } from '@/settings/general/GeneralTab';
+import { LinksTab } from '@/settings/links/LinksTab';
+import { ToolsTab } from '@/settings/tools/ToolsTab';
 import type { AppSettings } from '@/types';
 
 interface SettingsTabContentProps {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertDialog } from '@/components/common/AlertDialog';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { AlertDialog } from '@/shared/components/AlertDialog';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import type { AppSettings, Link } from '@/types';
 import { ALL_GROUP_ID, ALL_GROUP_TITLE } from './constants';
 import { ZH_CN_TEXTS } from '@/shared/texts/zh-CN';

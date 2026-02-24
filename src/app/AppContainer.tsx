@@ -4,7 +4,7 @@ import { useAppActions } from './actions/useAppActions';
 import { useAppBootstrap } from './hooks/useAppBootstrap';
 import { useBackgroundManager } from './hooks/useBackgroundManager';
 import { useThemeSync } from './hooks/useThemeSync';
-import type { ContextMenuState } from '@/components/ContextMenu';
+import type { ContextMenuState } from '@/context-menu';
 import type { Link } from '@/types';
 
 export const AppContainer: React.FC = () => {

@@ -13,6 +13,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
     const [qrError, setQrError] = useState('');
 
     const styles = getCommonStyles(theme);
+    const hintTextClass = `text-xs ${theme === 'light' ? 'text-gray-700' : 'text-gray-500'}`;
 
     const handleDownloadQr = () => {
         const canvas = document.querySelector('#qr-code-canvas') as HTMLCanvasElement;
@@ -72,7 +73,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center ml-1">
-                                    <label className="text-xs font-medium text-gray-500">输入内容</label>
+                                    <label className={`${hintTextClass} font-medium`}>输入内容</label>
                                     <div className="flex gap-2">
                                         <label className={`cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
                                             <Upload size={12} />
@@ -98,7 +99,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
                                     <X size={12} /> {qrError}
                                 </p>
                             )}
-                            <div className="text-xs text-gray-500 ml-1">
+                            <div className={`${hintTextClass} ml-1`}>
                                 支持文本、网址、邮箱等格式。
                             </div>
                         </div>

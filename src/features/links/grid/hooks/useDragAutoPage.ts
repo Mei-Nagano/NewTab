@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import type { DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
 import {
   PAGINATION_EDGE_DWELL_MS,
-  PAGINATION_EDGE_TRIGGER_SIZE,
+  PAGINATION_EDGE_FORCE_OUTSIDE_OFFSET,
+  PAGINATION_EDGE_OUTSIDE_OFFSET,
   PAGINATION_SWITCH_COOLDOWN,
 } from '../constants';
 import type { LinkWithGroup } from '../types';
@@ -52,7 +53,7 @@ export const useDragAutoPage = ({
     edgeStateRef.current = { edge: null, enteredAt: 0 };
   };
 
-  const updatePageByDragY = (clientY: number) => {
+  const updatePageByDragY = (clientY: number, isOverItem: boolean) => {
     if (!isPagination || !isEditMode || totalPages <= 1 || !hasActiveLink) {
       edgeStateRef.current = { edge: null, enteredAt: 0 };
       return;
@@ -61,15 +62,28 @@ export const useDragAutoPage = ({
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    const triggerSize = Math.min(
-      PAGINATION_EDGE_TRIGGER_SIZE,
-      Math.max(36, Math.floor(rect.height * 0.14))
+    const outsideOffset = Math.min(
+      PAGINATION_EDGE_OUTSIDE_OFFSET,
+      Math.max(12, Math.floor(rect.height * 0.03))
     );
 
+    const topOverflow = rect.top - clientY;
+    const bottomOverflow = clientY - rect.bottom;
+    const overflowDistance = Math.max(topOverflow, bottomOverflow);
+
     let edge: 'top' | 'bottom' | null = null;
-    if (clientY <= rect.top + triggerSize) edge = 'top';
-    if (clientY >= rect.bottom - triggerSize) edge = 'bottom';
+    if (topOverflow >= outsideOffset) edge = 'top';
+    if (bottomOverflow >= outsideOffset) edge = 'bottom';
     if (!edge) {
+      edgeStateRef.current = { edge: null, enteredAt: 0 };
+      return;
+    }
+
+    const forceOutsideOffset = Math.min(
+      PAGINATION_EDGE_FORCE_OUTSIDE_OFFSET,
+      Math.max(20, Math.floor(rect.height * 0.06))
+    );
+    if (isOverItem && overflowDistance < forceOutsideOffset) {
       edgeStateRef.current = { edge: null, enteredAt: 0 };
       return;
     }
@@ -96,7 +110,7 @@ export const useDragAutoPage = ({
     },
     handleDragMove: (event, dragStartClientY) => {
       if (dragStartClientY === null) return;
-      updatePageByDragY(dragStartClientY + event.delta.y);
+      updatePageByDragY(dragStartClientY + event.delta.y, !!event.over);
     },
     resolveActiveLink: (event, links) => links.find((item) => item.id === event.active.id) || null,
     reset,

@@ -1,4 +1,4 @@
-import { SiteIcon } from '@/components/common/SiteIcon';
+import { SiteIcon } from '@/shared/components/SiteIcon';
 import type { Link, Theme } from '@/constants';
 
 interface LinkDragOverlayProps {

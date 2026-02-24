@@ -1,6 +1,6 @@
-import { AlertDialog } from '@/components/common/AlertDialog';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { BookmarkImportView } from '@/components/settings/BookmarkImportView';
+import { AlertDialog } from '@/shared/components/AlertDialog';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { BookmarkImportView } from './links/BookmarkImportView';
 import { useSettingsModal } from '@/settings/hooks/useSettingsModal';
 import type { AppSettings } from '@/types';
 import { SettingsFooter } from './layout/SettingsFooter';
@@ -20,10 +20,14 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   const state = useSettingsModal(props);
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
   if (!props.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onContextMenu={(event) => event.preventDefault()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onContextMenu={handleContextMenu}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={props.onClose} />
 
       <SettingsFrame

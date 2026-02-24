@@ -1,5 +1,5 @@
 import { arrayMove } from '@dnd-kit/sortable';
-import type { Link, LinkGroup } from '../constants';
+import type { Link, LinkGroup } from '@/types';
 
 /**
  * 重新排序数组中的项目

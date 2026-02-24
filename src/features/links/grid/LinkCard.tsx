@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { SiteIcon } from '@/components/common/SiteIcon';
+import { SiteIcon } from '@/shared/components/SiteIcon';
 import type { Link, Theme } from '@/constants';
 
 interface LinkCardProps {

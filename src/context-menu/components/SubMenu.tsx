@@ -1,5 +1,5 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
-import type { MenuItem } from './types';
+import type { MenuItem } from '../types';
 import { ContextMenuItem } from './ContextMenuItem';
 import { ContextMenuSeparator } from './ContextMenuSeparator';
 
@@ -131,6 +131,7 @@ export const SubMenu: React.FC<SubMenuProps> = ({ item, isLight, onClose, menuCl
                                     icon={child.icon}
                                     isLight={isLight}
                                     checked={child.checked}
+                                    reserveLeadingSlot={true}
                                     className={``}
                                     onClick={() => {
                                         child.onClick?.();

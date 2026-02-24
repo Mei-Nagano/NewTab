@@ -1,12 +1,12 @@
-import { Clock } from '@/components/features/widgets/Clock';
-import { ContextMenu } from '@/components/ContextMenu';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { GroupEditDialog } from '@/components/features/links/GroupEditDialog';
-import { LinkEditDialog } from '@/components/features/links/LinkEditDialog';
-import { LinkGrid } from '@/components/features/links/LinkGrid';
-import { SearchBar } from '@/components/features/search/SearchBar';
-import { SettingsModal } from '@/components/SettingsModal';
-import type { ContextMenuState } from '@/components/ContextMenu';
+import { ContextMenu } from '@/context-menu';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
+import { GroupEditDialog } from '@/features/links/dialogs/GroupEditDialog';
+import { LinkEditDialog } from '@/features/links/dialogs/LinkEditDialog';
+import { LinkGrid } from '@/features/links/grid/LinkGrid';
+import { SearchBar } from '@/features/search/SearchBar';
+import { Clock } from '@/features/widgets/Clock';
+import { SettingsModal } from '@/settings/SettingsModal';
+import type { ContextMenuState } from '@/context-menu';
 import type { AppSettings, HideOptions, Link, Theme } from '@/types';
 
 interface AppLayoutProps {
@@ -45,11 +45,13 @@ interface AppLayoutProps {
 
 export const AppLayout: React.FC<AppLayoutProps> = (props) => {
   const isLight = props.theme === 'light';
+  const blurAmount = Math.min(24, Math.max(0, props.settings.bgBlurAmount ?? 8));
+  const darkMaskOpacity = Math.min(100, Math.max(0, props.settings.darkMaskOpacity ?? 40));
 
   return (
     <div className={`relative w-screen h-screen overflow-hidden bg-gray-900 font-sans ${!isLight ? 'dark' : ''}`} onContextMenu={props.onContextBlank}>
-      <div className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-1000 pointer-events-none" style={{ backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none', opacity: props.backgroundImage ? 1 : 0, filter: `brightness(${props.settings.bgBlur ? 0.85 : 1}) blur(${props.settings.bgBlur ? `${props.settings.bgBlurAmount ?? 8}px` : '0px'})` }} />
-      {!isLight && props.settings.enableDarkMask && <div className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000" style={{ backgroundColor: props.backgroundImage ? `rgba(0, 0, 0, ${(props.settings.darkMaskOpacity ?? 40) / 100})` : '#0f1115' }} />}
+      <div className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-1000 pointer-events-none" style={{ backgroundImage: props.backgroundImage ? `url(${props.backgroundImage})` : 'none', opacity: props.backgroundImage ? 1 : 0, filter: `brightness(${props.settings.bgBlur ? 0.85 : 1}) blur(${props.settings.bgBlur ? `${blurAmount}px` : '0px'})` }} />
+      {!isLight && props.settings.enableDarkMask && <div className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000" style={{ backgroundColor: props.backgroundImage ? `rgba(0, 0, 0, ${darkMaskOpacity / 100})` : '#0f1115' }} />}
 
       <div className={`absolute inset-0 z-10 ${props.settings.linkDisplayMode === 'pagination' ? 'overflow-hidden' : 'overflow-y-auto'} custom-scrollbar`}>
         <div className="min-h-full w-full flex flex-col items-center py-12">

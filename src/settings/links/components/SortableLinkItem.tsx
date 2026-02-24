@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { Link } from '../../constants';
-import { SiteIcon } from '../common/SiteIcon';
+import type { Link } from '@/constants';
+import { SiteIcon } from '@/shared/components/SiteIcon';
 
 interface SortableLinkItemProps {
     link: Link;
@@ -21,7 +21,8 @@ export const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition,
+        // Prevent transform easing while dragging to keep movement in sync with pointer.
+        transition: isDragging ? 'none' : transition,
     };
 
     return (
@@ -37,7 +38,7 @@ export const SortableLinkItem: React.FC<SortableLinkItemProps> = ({
                         : (theme === 'light' ? 'bg-white hover:bg-gray-50 border-gray-100 hover:border-blue-200 hover:shadow-md hover:shadow-gray-200/50' : 'bg-white/5 border-transparent hover:border-white/10 hover:bg-white/[0.08]')
                 }`}
         >
-            <div {...attributes} {...listeners} className={`flex-shrink-0 p-2 cursor-grab active:cursor-grabbing rounded-xl transition-all ${theme === 'light' ? 'text-gray-300 hover:text-blue-500 hover:bg-blue-50' : 'text-gray-600 hover:text-blue-400 hover:bg-white/5'
+            <div {...attributes} {...listeners} className={`flex-shrink-0 p-2 cursor-grab active:cursor-grabbing touch-none rounded-xl transition-all ${theme === 'light' ? 'text-gray-300 hover:text-blue-500 hover:bg-blue-50' : 'text-gray-600 hover:text-blue-400 hover:bg-white/5'
                 }`} title="拖拽排序">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" /></svg>
             </div>

@@ -43,6 +43,27 @@ const ensureNonEmptyGroups = (settings: AppSettings): AppSettings => {
   };
 };
 
+const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const ensureVisualSettings = (settings: AppSettings): AppSettings => {
+  const defaultBlurAmount = DEFAULT_SETTINGS.bgBlurAmount ?? 8;
+  const defaultDarkMaskOpacity = DEFAULT_SETTINGS.darkMaskOpacity ?? 40;
+  const rawBlurAmount =
+    typeof settings.bgBlurAmount === 'number' && Number.isFinite(settings.bgBlurAmount)
+      ? settings.bgBlurAmount
+      : defaultBlurAmount;
+  const rawDarkMaskOpacity =
+    typeof settings.darkMaskOpacity === 'number' && Number.isFinite(settings.darkMaskOpacity)
+      ? settings.darkMaskOpacity
+      : defaultDarkMaskOpacity;
+
+  return {
+    ...settings,
+    bgBlurAmount: clamp(rawBlurAmount, 0, 24),
+    darkMaskOpacity: clamp(rawDarkMaskOpacity, 0, 100),
+  };
+};
+
 export const normalizeSettings = (settings: AppSettings): AppSettings => {
-  return ensureNonEmptyGroups(removeVirtualGroups(migrateLegacyLinksField(settings)));
+  return ensureVisualSettings(ensureNonEmptyGroups(removeVirtualGroups(migrateLegacyLinksField(settings))));
 };
