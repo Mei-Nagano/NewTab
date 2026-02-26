@@ -49,4 +49,16 @@ describe('storage migrations', () => {
     expect(missingResult.bgBlurAmount).toBe(DEFAULT_SETTINGS.bgBlurAmount);
     expect(missingResult.darkMaskOpacity).toBe(DEFAULT_SETTINGS.darkMaskOpacity);
   });
+
+  it('migrates legacy hidePaginationControls to hideOptions', () => {
+    const legacy = {
+      ...DEFAULT_SETTINGS,
+      hideOptions: undefined,
+      hidePaginationControls: true,
+    } as AppSettings & { hidePaginationControls: boolean };
+
+    const result = normalizeSettings(legacy as AppSettings);
+    expect(result.hideOptions?.hidePaginationControls).toBe(true);
+    expect('hidePaginationControls' in result).toBe(false);
+  });
 });

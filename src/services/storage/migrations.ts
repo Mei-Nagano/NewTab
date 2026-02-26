@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS } from '@/constants';
+import { DEFAULT_HIDE_OPTIONS, DEFAULT_SETTINGS } from '@/constants';
 import type { AppSettings } from '@/types';
 
 export const VIRTUAL_ALL_GROUP_ID = '__all__';
@@ -64,6 +64,29 @@ const ensureVisualSettings = (settings: AppSettings): AppSettings => {
   };
 };
 
+const ensureHideOptions = (settings: AppSettings): AppSettings => {
+  const legacy = settings as AppSettings & { hidePaginationControls?: boolean };
+  const hideOptions = {
+    ...DEFAULT_HIDE_OPTIONS,
+    ...(settings.hideOptions ?? {}),
+  };
+
+  if (
+    typeof legacy.hidePaginationControls === 'boolean' &&
+    typeof settings.hideOptions?.hidePaginationControls !== 'boolean'
+  ) {
+    hideOptions.hidePaginationControls = legacy.hidePaginationControls;
+  }
+
+  const { hidePaginationControls: _legacyHiddenPagination, ...rest } = legacy;
+  return {
+    ...(rest as AppSettings),
+    hideOptions,
+  };
+};
+
 export const normalizeSettings = (settings: AppSettings): AppSettings => {
-  return ensureVisualSettings(ensureNonEmptyGroups(removeVirtualGroups(migrateLegacyLinksField(settings))));
+  return ensureHideOptions(
+    ensureVisualSettings(ensureNonEmptyGroups(removeVirtualGroups(migrateLegacyLinksField(settings))))
+  );
 };

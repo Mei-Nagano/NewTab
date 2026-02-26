@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
@@ -12,18 +12,30 @@ import { useGridPagination } from './hooks/useGridPagination';
 import { useWheelPageSwitch } from './hooks/useWheelPageSwitch';
 import type { LinkGridProps, LinkWithGroup } from './types';
 
+const SELECTED_GROUP_STORAGE_KEY = 'newtab_selected_group_id';
+
+const readStoredGroupId = (): string => {
+  if (typeof window === 'undefined') return ALL_GROUP_ID;
+  try {
+    return window.localStorage.getItem(SELECTED_GROUP_STORAGE_KEY) || ALL_GROUP_ID;
+  } catch {
+    return ALL_GROUP_ID;
+  }
+};
+
 export const LinkGrid: React.FC<LinkGridProps> = ({
   groups,
   theme,
   isEditMode = false,
   linkDisplayMode = 'scroll',
+  hidePaginationControls = false,
   onReorderLinks,
   onLinkContextMenu,
   onGroupContextMenu,
   forceHideGroupNames = false,
   onDeleteLink,
 }) => {
-  const [selectedGroupId, setSelectedGroupId] = useState<string>(ALL_GROUP_ID);
+  const [selectedGroupId, setSelectedGroupId] = useState<string>(() => readStoredGroupId());
   const [activeLink, setActiveLink] = useState<LinkWithGroup | null>(null);
   const paginationContainerRef = useRef<HTMLDivElement | null>(null);
   const dragStartClientYRef = useRef<number | null>(null);
@@ -37,6 +49,25 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
   );
   const groupByLinkId = useMemo(() => new Map(selectedLinks.map((link) => [link.id, link.groupId])), [selectedLinks]);
   const totalLinkCount = useMemo(() => filteredGroups.reduce((sum, group) => sum + group.links.length, 0), [filteredGroups]);
+
+  useEffect(() => {
+    const exists = filteredGroups.some((group) => group.id === selectedGroupId);
+    if (selectedGroupId !== ALL_GROUP_ID && !exists) {
+      setSelectedGroupId(ALL_GROUP_ID);
+      return;
+    }
+
+    if (typeof window === 'undefined') return;
+    try {
+      if (selectedGroupId === ALL_GROUP_ID) {
+        window.localStorage.removeItem(SELECTED_GROUP_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(SELECTED_GROUP_STORAGE_KEY, selectedGroupId);
+      }
+    } catch {
+      // Ignore storage write failures.
+    }
+  }, [filteredGroups, selectedGroupId]);
 
   const pagination = useGridPagination({
     isPagination,
@@ -99,7 +130,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
             <GroupSidebar groups={filteredGroups} selectedGroupId={selectedGroupId} totalLinkCount={totalLinkCount} theme={theme} onSelectGroup={setSelectedGroupId} onGroupContextMenu={onGroupContextMenu} />
           </div>
         )}
-        {isPagination && (
+        {isPagination && !hidePaginationControls && (
           <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 z-20">
             <PaginationSidebar theme={theme} currentPage={pagination.currentPage} totalPages={pagination.totalPages} isExpanded={pagination.isExpanded} onPageChange={pagination.setCurrentPage} onPrev={() => pagination.setCurrentPage((prev) => Math.max(0, prev - 1))} onNext={() => pagination.setCurrentPage((prev) => Math.min(pagination.totalPages - 1, prev + 1))} onMouseEnter={pagination.onMouseEnter} onMouseLeave={pagination.onMouseLeave} />
           </div>

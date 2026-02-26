@@ -4,6 +4,7 @@ import type { ContextMenuProps, MenuItem } from '@/context-menu/types';
 export interface BlankMenuBuilderContext {
   isLight: boolean;
   isEditMode: boolean;
+  isPaginationMode?: boolean;
   hideOptions?: HideOptions;
   onToggleTheme: ContextMenuProps['onToggleTheme'];
   onSaveWallpaper?: ContextMenuProps['onSaveWallpaper'];

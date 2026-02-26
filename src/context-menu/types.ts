@@ -14,6 +14,7 @@ export interface ContextMenuProps {
     state: ContextMenuState;
     theme: Theme;
     isEditMode: boolean;
+    isPaginationMode?: boolean;
     hideOptions?: HideOptions;
     onClose: () => void;
     onToggleTheme: () => void;

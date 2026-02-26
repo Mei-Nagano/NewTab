@@ -5,9 +5,10 @@ import { buildLinkMenu } from '@/context-menu/builders/buildLinkMenu';
 
 describe('context-menu builders', () => {
   it('buildBlankMenu should include hide-options submenu', () => {
-    const items = buildBlankMenu({
+    const paginationItems = buildBlankMenu({
       isLight: true,
       isEditMode: false,
+      isPaginationMode: true,
       hideOptions: undefined,
       onToggleTheme: vi.fn(),
       onSaveWallpaper: vi.fn(),
@@ -16,7 +17,24 @@ describe('context-menu builders', () => {
       onToggleHideOption: vi.fn(),
       onToggleAllVisibility: vi.fn(),
     });
-    expect(items.some((item) => item.id === 'hide-options')).toBe(true);
+    expect(paginationItems.some((item) => item.id === 'hide-options')).toBe(true);
+    const hideMenu = paginationItems.find((item) => item.id === 'hide-options');
+    expect(hideMenu?.children?.some((item) => item.id === 'hpc')).toBe(true);
+
+    const scrollItems = buildBlankMenu({
+      isLight: true,
+      isEditMode: false,
+      isPaginationMode: false,
+      hideOptions: undefined,
+      onToggleTheme: vi.fn(),
+      onSaveWallpaper: vi.fn(),
+      onToggleEditMode: vi.fn(),
+      onOpenSettings: vi.fn(),
+      onToggleHideOption: vi.fn(),
+      onToggleAllVisibility: vi.fn(),
+    });
+    const scrollHideMenu = scrollItems.find((item) => item.id === 'hide-options');
+    expect(scrollHideMenu?.children?.some((item) => item.id === 'hpc')).toBe(false);
   });
 
   it('buildLinkMenu should return edit and delete actions', () => {

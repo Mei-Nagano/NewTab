@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { AlertDialog } from '@/shared/components/AlertDialog';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { BookmarkImportView } from './links/BookmarkImportView';
@@ -20,10 +21,17 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   const state = useSettingsModal(props);
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
     event.stopPropagation();
   };
+
+  useEffect(() => {
+    if (state.isImportMode) return;
+    contentScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [state.activeTab, state.isImportMode]);
+
   if (!props.isOpen) return null;
 
   return (
@@ -44,10 +52,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
 
           {state.isImportMode ? (
             <div className="flex-1 overflow-hidden flex flex-col">
-              <BookmarkImportView groupTitle={state.activeGroupTitle} searchTerm={state.searchTerm} onSearchChange={state.setSearchTerm} candidates={state.filteredCandidates} selectedIds={state.selectedCandidateIds} onToggle={state.toggleCandidate} onSelectAll={state.toggleSelectAllImport} onConfirm={state.confirmImport} onCancel={() => state.setIsImportMode(false)} theme={props.theme} />
+              <BookmarkImportView
+                currentGroupTitle={state.activeGroupTitle}
+                importTarget={state.importTarget}
+                onImportTargetChange={state.setImportTarget}
+                searchTerm={state.searchTerm}
+                onSearchChange={state.setSearchTerm}
+                folders={state.filteredFolders}
+                selectedLinkIds={state.selectedLinkIds}
+                expandedFolderIds={state.expandedFolderIds}
+                onToggleFolderExpand={state.toggleFolderExpand}
+                onToggleFolderLinks={state.toggleFolderLinks}
+                onToggleLink={state.toggleLink}
+                onSelectAll={state.toggleSelectAllImport}
+                onConfirm={state.confirmImport}
+                onCancel={() => state.setIsImportMode(false)}
+                theme={props.theme}
+              />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto p-8 custom-scrollbar">
+            <div ref={contentScrollRef} className="flex-1 flex flex-col min-h-0 overflow-y-auto p-8 custom-scrollbar">
               <div className="max-w-5xl mx-auto w-full animate-fade-in">
                 <SettingsTabContent
                   activeTab={state.activeTab}

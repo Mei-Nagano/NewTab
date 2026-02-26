@@ -45,6 +45,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
             <div className={`text-[11px] mt-0.5 font-medium ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>固定网格翻页</div>
           </button>
         </div>
+
       </div>
 
       <div

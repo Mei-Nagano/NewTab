@@ -1,4 +1,4 @@
-import type { AppSettings, Link, LinkGroup, WebDavConfig, PomodoroSettings } from './types';
+import type { AppSettings, HideOptions, Link, LinkGroup, WebDavConfig, PomodoroSettings } from './types';
 
 export const DEFAULT_LINKS: Link[] = [
   { id: "1", title: "Google", url: "https://www.google.com" },
@@ -30,6 +30,16 @@ export const DEFAULT_POMODORO: PomodoroSettings = {
   transparentBg: true,
 };
 
+export const DEFAULT_HIDE_OPTIONS: HideOptions = {
+  hideAllLinks: false,
+  hideGroupNames: false,
+  hidePaginationControls: false,
+  hideSearchBox: false,
+  hideButtons: false,
+  hideDate: false,
+  hideClock: false,
+};
+
 export const DEFAULT_SETTINGS: AppSettings = {
   bgType: "bing",
   customBgUrl: "",
@@ -38,6 +48,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   searchEngine: "bing",
   groups: DEFAULT_GROUPS,
   theme: "dark",
+  hideOptions: DEFAULT_HIDE_OPTIONS,
   showSeconds: false,
   enableDarkMask: true,
   darkMaskOpacity: 40,

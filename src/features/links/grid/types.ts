@@ -22,6 +22,7 @@ export interface LinkGridProps {
   theme: Theme;
   isEditMode?: boolean;
   linkDisplayMode?: LinkDisplayMode;
+  hidePaginationControls?: boolean;
   onReorderLinks?: (payload: ReorderPayload) => void;
   onLinkContextMenu?: (event: React.MouseEvent, link: Link, groupId: string) => void;
   onToggleCollapse?: (groupId: string) => void;

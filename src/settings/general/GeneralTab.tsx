@@ -1,7 +1,6 @@
 import type { AppSettings } from '@/types';
 import { AppearanceSection } from './sections/AppearanceSection';
 import { BackgroundSection } from './sections/BackgroundSection';
-import { DisplaySection } from './sections/DisplaySection';
 import { SearchSection } from './sections/SearchSection';
 import { SystemSection } from './sections/SystemSection';
 
@@ -27,7 +26,6 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
   return (
     <div className="space-y-8 pb-4">
       <BackgroundSection settings={settings} onSettingsChange={onSettingsChange} onSaveWallpaper={onSaveWallpaper} theme={theme} />
-      <DisplaySection settings={settings} onSettingsChange={onSettingsChange} theme={theme} />
       <SearchSection settings={settings} onSettingsChange={onSettingsChange} theme={theme} />
       <AppearanceSection settings={settings} onSettingsChange={onSettingsChange} theme={theme} />
       <SystemSection theme={theme} cacheClearStatus={cacheClearStatus} onClearCache={onClearCache} onResetSettings={onResetSettings} />

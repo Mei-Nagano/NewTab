@@ -1,17 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // 默认图标组件
-const DefaultIcon: React.FC<{ title: string; size?: string }> = ({ title, size = "w-6 h-6" }) => {
-    const firstChar = title ? title.charAt(0).toUpperCase() : '?';
+const DefaultIcon: React.FC<{ title: string; size?: string; className?: string }> = ({
+    title,
+    size = "w-6 h-6",
+    className = "",
+}) => {
+    const normalizedTitle = title.trim();
+    const firstChar = normalizedTitle ? normalizedTitle.charAt(0).toUpperCase() : '';
     const colors = [
         'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500',
         'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
     ];
-    const colorIndex = title ? title.charCodeAt(0) % colors.length : 0;
+    const colorIndex = normalizedTitle ? normalizedTitle.charCodeAt(0) % colors.length : 0;
     const bgColor = colors[colorIndex];
 
+    if (!firstChar) {
+        return (
+            <div className={`${size} ${className} rounded-lg flex items-center justify-center bg-slate-300/70 text-slate-700 dark:bg-slate-700/70 dark:text-slate-200`}>
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-1/2 h-1/2"
+                >
+                    <path d="M10 13a5 5 0 0 0 7.54.54l1.92-1.92a5 5 0 0 0-7.07-7.07L11.3 5.63" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-1.92 1.92a5 5 0 0 0 7.07 7.07l1.08-1.08" />
+                </svg>
+            </div>
+        );
+    }
+
     return (
-        <div className={`${size} ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-sm leading-none`}>
+        <div className={`${size} ${className} ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-sm leading-none`}>
             {firstChar}
         </div>
     );
@@ -97,7 +122,7 @@ export const SiteIcon: React.FC<{
     }, [url, customIcon, linkId]);
 
     if (status === 'loading' || status === 'error') {
-        return <DefaultIcon title={title} size={size} />;
+        return <DefaultIcon title={title} size={size} className={className} />;
     }
 
     return (

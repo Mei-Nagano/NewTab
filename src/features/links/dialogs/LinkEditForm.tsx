@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { SiteIcon } from '@/shared/components/SiteIcon';
+import { IconSourcePicker } from '@/shared/components/IconSourcePicker';
 
 interface LinkEditFormProps {
   title: string;
@@ -21,20 +22,6 @@ export const LinkEditForm: React.FC<LinkEditFormProps> = ({
   onIconChange,
 }) => {
   const isLight = theme === 'light';
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 500 * 1024) return;
-
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      onIconChange(String(readerEvent.target?.result || ''));
-    };
-    reader.readAsDataURL(file);
-  };
 
   return (
     <div className="space-y-8">
@@ -43,26 +30,7 @@ export const LinkEditForm: React.FC<LinkEditFormProps> = ({
         <div className={`relative group w-24 h-24 rounded-[2rem] border-2 transition-all duration-500 overflow-hidden ${isLight ? 'bg-gray-50 border-gray-100 shadow-lg shadow-gray-200/50' : 'bg-white/5 border-white/10 shadow-xl'
           }`}>
           <SiteIcon url={url} title={title} customIcon={icon} size="w-full h-full" className="rounded-[1.8rem]" />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </button>
         </div>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-        {icon && (
-          <button
-            onClick={() => onIconChange('')}
-            className={`text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${isLight ? 'text-red-400 hover:text-red-600' : 'text-red-500/70 hover:text-red-400'}`}
-          >
-            重置自定图标
-          </button>
-        )}
       </div>
 
       <div className="space-y-5">
@@ -93,6 +61,12 @@ export const LinkEditForm: React.FC<LinkEditFormProps> = ({
             placeholder="https://example.com"
           />
         </div>
+
+        <IconSourcePicker
+          theme={theme}
+          icon={icon}
+          onIconChange={onIconChange}
+        />
       </div>
     </div>
   );

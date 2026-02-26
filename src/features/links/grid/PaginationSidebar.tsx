@@ -32,6 +32,7 @@ export const PaginationSidebar: React.FC<PaginationSidebarProps> = ({
 
   return (
     <div
+      data-testid="pagination-sidebar"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={`flex flex-col items-center animate-fade-in transition-all duration-300 ${isLight ? 'bg-white/35 border-white/50' : 'bg-black/20 border-white/10'} backdrop-blur-md border rounded-2xl ${isExpanded ? 'gap-4 px-2.5 py-3' : 'gap-2 px-2 py-2.5'}`}

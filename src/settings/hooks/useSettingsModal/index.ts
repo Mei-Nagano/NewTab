@@ -17,15 +17,15 @@ export const useSettingsModal = ({ isOpen, settings, onSave, onClose }: UseSetti
   useEffect(() => {
     if (!isOpen) return;
     setTempSettings(settings);
-    if (settings.groups.length > 0) {
-      const currentExists = settings.groups.some((group) => group.id === activeGroupId);
-      if (!currentExists || activeGroupId === ALL_GROUP_ID) {
-        setActiveGroupId(settings.groups[0].id);
+    setActiveGroupId((currentGroupId) => {
+      if (settings.groups.length === 0) return '';
+      const currentExists = settings.groups.some((group) => group.id === currentGroupId);
+      if (!currentExists || currentGroupId === ALL_GROUP_ID) {
+        return settings.groups[0].id;
       }
-    } else {
-      setActiveGroupId('');
-    }
-  }, [isOpen, settings, activeGroupId]);
+      return currentGroupId;
+    });
+  }, [isOpen, settings]);
 
   const bookmarkImport = useBookmarkImport({
     activeGroupId,

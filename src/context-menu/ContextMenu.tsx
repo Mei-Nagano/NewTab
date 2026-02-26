@@ -14,6 +14,7 @@ const toMenuItems = (props: ContextMenuProps, isLight: boolean): MenuItem[] => {
     return buildBlankMenu({
       isLight,
       isEditMode: props.isEditMode,
+      isPaginationMode: props.isPaginationMode,
       hideOptions: props.hideOptions,
       onToggleTheme: props.onToggleTheme,
       onSaveWallpaper: props.onSaveWallpaper,

@@ -59,20 +59,6 @@ export const ToolsTab: React.FC<ToolsTabProps> = ({ theme, backgroundImage, sett
         <div className="space-y-6 pb-4">
             <style>
                 {`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 5px;
-                    height: 5px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    border-radius: 10px;
-                    background: ${theme === 'light' ? '#e5e7eb' : '#3f3f46'};
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: ${theme === 'light' ? '#d1d5db' : '#52525b'};
-                }
                 /* Hide number input spinners */
                 input[type=number]::-webkit-inner-spin-button, 
                 input[type=number]::-webkit-outer-spin-button { 

@@ -1,6 +1,7 @@
 import type { ContextMenuState } from '@/context-menu';
 import { reorderLinksAcrossGroups, reorderLinksInGroup } from '@/shared/utils';
 import { saveSettings } from '@/services/storage';
+import { DEFAULT_HIDE_OPTIONS } from '@/constants';
 import type { AppSettings, HideOptions, Link, Theme } from '@/types';
 import type { ReorderPayload } from '@/features/links/grid/types';
 
@@ -14,15 +15,6 @@ interface UseAppActionsParams {
   setEditingGroup: React.Dispatch<React.SetStateAction<{ groupId: string; title: string } | null>>;
   setConfirmDialog: React.Dispatch<React.SetStateAction<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>>;
 }
-
-const DEFAULT_HIDE_OPTIONS: HideOptions = {
-  hideAllLinks: false,
-  hideGroupNames: false,
-  hideSearchBox: false,
-  hideButtons: false,
-  hideDate: false,
-  hideClock: false,
-};
 
 export const useAppActions = ({
   settings,

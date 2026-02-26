@@ -29,6 +29,7 @@ export interface WebDavConfig {
 export interface HideOptions {
   hideAllLinks: boolean; // 隐藏所有网页
   hideGroupNames: boolean; // 隐藏分组名称
+  hidePaginationControls: boolean; // 隐藏分页侧边栏（页码与翻页按钮）
   hideSearchBox: boolean; // 隐藏搜索框
   hideButtons: boolean; // 隐藏按钮（设置和主题切换）
   hideDate: boolean; // 隐藏日期

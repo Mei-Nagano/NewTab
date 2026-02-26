@@ -1,4 +1,5 @@
-import type { AppSettings, Link } from '@/types';
+import type { AppSettings } from '@/types';
+import type { BrowserBookmarkFolder } from '@/services/storage/bookmarkStore';
 
 export interface UseSettingsModalProps {
   isOpen: boolean;
@@ -21,8 +22,10 @@ export interface UseSettingsModalState {
   activeGroupId: string;
   isImportMode: boolean;
   isFetchingBookmarks: boolean;
-  bookmarkCandidates: Link[];
-  selectedCandidateIds: Set<string>;
+  bookmarkFolders: BrowserBookmarkFolder[];
+  selectedLinkIds: Set<string>;
+  expandedFolderIds: Set<string>;
+  importTarget: 'current-group' | 'new-groups';
   searchTerm: string;
   backupStatus: 'idle' | 'loading' | 'success' | 'error';
   statusMessage: string;
