@@ -2,12 +2,12 @@ import { DEFAULT_SETTINGS } from '@/constants';
 import type { AppSettings } from '@/types';
 import {
   isExtensionEnvironment,
+  readFromStorage,
   readRawFromStorage,
+  writeToStorage,
   writeRawToStorage,
 } from './envBridge';
 import { normalizeSettings } from './migrations';
-
-declare const chrome: any;
 
 const SETTINGS_KEY = 'newtab_settings';
 const LOCAL_IMAGE_FLAG = '[LOCAL_IMAGE]';
@@ -15,10 +15,7 @@ const IMAGE_STORAGE_KEY = 'newtab_custom_bg_data';
 
 const readSettingsPayload = async (): Promise<Partial<AppSettings> | undefined> => {
   if (isExtensionEnvironment()) {
-    const result = await new Promise<{ settings?: Partial<AppSettings> }>((resolve) => {
-      chrome.storage.local.get(['settings'], resolve);
-    });
-    return result.settings;
+    return await readFromStorage<Partial<AppSettings>>('settings');
   }
 
   const raw = localStorage.getItem(SETTINGS_KEY);
@@ -54,9 +51,7 @@ export const loadSettings = async (): Promise<AppSettings> => {
 
 const persistSettingsPayload = async (settings: AppSettings): Promise<void> => {
   if (isExtensionEnvironment()) {
-    await new Promise<void>((resolve) => {
-      chrome.storage.local.set({ settings }, () => resolve());
-    });
+    await writeToStorage('settings', settings);
     return;
   }
 

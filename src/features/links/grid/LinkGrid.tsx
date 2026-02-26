@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragMoveEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
-import { ALL_GROUP_ID } from './constants';
+import { ALL_GROUP_ID, SELECTED_GROUP_STORAGE_KEY } from './constants';
 import { GroupSidebar } from './GroupSidebar';
 import { LinkCard } from './LinkCard';
 import { LinkDragOverlay } from './LinkDragOverlay';
@@ -11,8 +11,6 @@ import { useDragAutoPage } from './hooks/useDragAutoPage';
 import { useGridPagination } from './hooks/useGridPagination';
 import { useWheelPageSwitch } from './hooks/useWheelPageSwitch';
 import type { LinkGridProps, LinkWithGroup } from './types';
-
-const SELECTED_GROUP_STORAGE_KEY = 'newtab_selected_group_id';
 
 const readStoredGroupId = (): string => {
   if (typeof window === 'undefined') return ALL_GROUP_ID;
@@ -59,11 +57,7 @@ export const LinkGrid: React.FC<LinkGridProps> = ({
 
     if (typeof window === 'undefined') return;
     try {
-      if (selectedGroupId === ALL_GROUP_ID) {
-        window.localStorage.removeItem(SELECTED_GROUP_STORAGE_KEY);
-      } else {
-        window.localStorage.setItem(SELECTED_GROUP_STORAGE_KEY, selectedGroupId);
-      }
+      window.localStorage.setItem(SELECTED_GROUP_STORAGE_KEY, selectedGroupId);
     } catch {
       // Ignore storage write failures.
     }

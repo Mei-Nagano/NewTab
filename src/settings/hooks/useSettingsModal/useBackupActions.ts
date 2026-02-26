@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { AppSettings } from '@/types';
 import { exportSettingsToFile, importSettingsFromFile } from '@/services/storage';
-import { backupToWebDav, restoreFromWebDav } from '@/services/webdav';
+import { backupToWebDav } from '@/services/webdav/backup';
+import { restoreFromWebDav } from '@/services/webdav/restore';
 
 interface UseBackupActionsParams {
   tempSettings: AppSettings;

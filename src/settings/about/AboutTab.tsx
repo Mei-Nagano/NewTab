@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { APP_VERSION } from '@/constants';
-import { checkUpdate, type UpdateInfo, GITHUB_OWNER, GITHUB_REPO } from '@/services/update';
+import { checkUpdate } from '@/services/update/checkUpdate';
+import { GITHUB_OWNER, GITHUB_REPO, type UpdateInfo } from '@/services/update/types';
 import { SettingSection } from '../components/SettingSection';
 
 interface AboutTabProps {

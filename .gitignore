@@ -26,6 +26,8 @@ temp/
 logs/
 .opencode/
 .claude
+.codex
+.desloppify
 
 #opencode初始化文件
 AGENTS.md

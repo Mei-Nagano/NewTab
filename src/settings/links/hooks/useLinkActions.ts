@@ -1,4 +1,5 @@
 import type { AppSettings, Link } from '@/types';
+import { buildLinkDedupKeySet, normalizeLinkUrl, toLinkDedupKey } from '@/shared/utils';
 import type { LinkFormState } from '../types';
 
 interface UseLinkActionsParams {
@@ -8,12 +9,7 @@ interface UseLinkActionsParams {
   onSettingsChange: (settings: AppSettings) => void;
 }
 
-const normalizeUrl = (url: string): string => {
-  if (url.startsWith('http') || url.startsWith('data:')) {
-    return url;
-  }
-  return `https://${url}`;
-};
+export type SaveLinkResult = 'saved' | 'invalid' | 'duplicate';
 
 export const useLinkActions = ({
   settings,
@@ -21,12 +17,20 @@ export const useLinkActions = ({
   isAllGroupSelected,
   onSettingsChange,
 }: UseLinkActionsParams) => {
-  const saveLink = (form: LinkFormState, editingLinkId: string | null) => {
-    if (isAllGroupSelected || !form.title.trim() || !form.url.trim()) return;
+  const saveLink = (form: LinkFormState, editingLinkId: string | null): SaveLinkResult => {
+    if (isAllGroupSelected || !form.title.trim() || !form.url.trim()) return 'invalid';
+
+    const normalizedUrl = normalizeLinkUrl(form.url);
+    const dedupKey = toLinkDedupKey(normalizedUrl);
+    if (!dedupKey) return 'invalid';
+
+    const existingDedupKeys = buildLinkDedupKeySet(settings.groups, editingLinkId || undefined);
+    if (existingDedupKeys.has(dedupKey)) return 'duplicate';
+
     const linkPayload: Link = {
       id: editingLinkId || Date.now().toString(),
       title: form.title.trim(),
-      url: normalizeUrl(form.url.trim()),
+      url: normalizedUrl,
       icon: form.icon || undefined,
     };
 
@@ -40,6 +44,8 @@ export const useLinkActions = ({
         return { ...group, links };
       }),
     });
+
+    return 'saved';
   };
 
   const removeLink = (linkId: string) => {

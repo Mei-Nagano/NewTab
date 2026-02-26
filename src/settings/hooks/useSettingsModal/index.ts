@@ -1,11 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AppSettings } from '@/types';
+import { ALL_GROUP_ID } from '@/settings/links/constants';
+import { SELECTED_GROUP_STORAGE_KEY } from '@/features/links/grid/constants';
 import type { UseSettingsModalProps } from './types';
 import { useBackupActions } from './useBackupActions';
 import { useBookmarkImport } from './useBookmarkImport';
 import { useResetActions } from './useResetActions';
 
-const ALL_GROUP_ID = '__all__';
+const readHomeSelectedGroupId = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(SELECTED_GROUP_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
 
 export const useSettingsModal = ({ isOpen, settings, onSave, onClose }: UseSettingsModalProps) => {
   const [activeTab, setActiveTab] = useState<'general' | 'links' | 'backup' | 'tools' | 'about'>('general');
@@ -19,8 +28,14 @@ export const useSettingsModal = ({ isOpen, settings, onSave, onClose }: UseSetti
     setTempSettings(settings);
     setActiveGroupId((currentGroupId) => {
       if (settings.groups.length === 0) return '';
+      const homeSelectedGroupId = readHomeSelectedGroupId();
+      if (homeSelectedGroupId === ALL_GROUP_ID) return ALL_GROUP_ID;
+      if (homeSelectedGroupId && settings.groups.some((group) => group.id === homeSelectedGroupId)) {
+        return homeSelectedGroupId;
+      }
+
       const currentExists = settings.groups.some((group) => group.id === currentGroupId);
-      if (!currentExists || currentGroupId === ALL_GROUP_ID) {
+      if (!currentExists) {
         return settings.groups[0].id;
       }
       return currentGroupId;
@@ -29,6 +44,7 @@ export const useSettingsModal = ({ isOpen, settings, onSave, onClose }: UseSetti
 
   const bookmarkImport = useBookmarkImport({
     activeGroupId,
+    tempSettings,
     setTempSettings,
     setAlertConfig,
   });
