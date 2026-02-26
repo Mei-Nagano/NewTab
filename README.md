@@ -1,4 +1,4 @@
-# ✨ NewTab - 美观且极简的新标签页
+﻿# ✨ NewTab - 美观且极简的新标签页
 
 <div align="center">
   <img src="public/icons/icon128.svg" alt="NewTab Logo" width="128" height="128" />
@@ -98,32 +98,63 @@ npm run build
 ## 📂 项目结构
 
 ```text
-NewTab/                      # 项目根目录
-├── public/                  # 静态资源
-│   ├── icons/               # 插件图标 (16px, 48px, 128px)
-│   ├── sounds/              # 音频资源 (番茄钟提示音等)
-│   └── manifest.json        # 浏览器扩展清单文件
-├── src/                     # 源代码
-│   ├── components/          # React 组件
-│   │   ├── common/          # 通用 UI 组件 (对话框、图标等)
-│   │   ├── features/        # 功能特性组件
-│   │   │   ├── links/       # 链接管理 (Grid, Pagination)
-│   │   │   ├── search/      # 搜索功能
-│   │   │   └── widgets/     # 小部件 (时钟、番茄钟等)
-│   │   ├── settings/        # 设置面板
-│   │   │   ├── tools/       # 实用工具页 (Base64, JSON 等)
-│   │   │   └── hooks/       # 设置相关 Hooks
-│   │   └── ContextMenu/     # 右键自定义菜单
-│   ├── utils/               # 工具函数
-│   │   ├── storage.ts       # 本地持久化与书签同步
-│   │   ├── webdav.ts        # WebDAV 备份与恢复逻辑
-│   │   └── update.ts        # 在线检查版本更新
-│   ├── constants.ts         # 全局常量 (默认配置、版本号等)
-│   ├── index.css            # 全局样式 (Tailwind CSS 指令)
-│   ├── App.tsx              # 应用根组件，负责核心状态管理
-│   └── main.tsx             # 应用入口文件
-├── dist/                    # 生产构建输出 (Build 后生成)
-└── package.json             # 项目元数据与脚本配置
+NewTab/
+├─ public/                    # 扩展静态资源（icons、sounds、manifest 等）
+├─ scripts/                   # 构建/校验脚本
+├─ src/
+│  ├─ app/                    # 应用入口编排与初始化逻辑
+│  │  ├─ actions/
+│  │  └─ hooks/
+│  ├─ context-menu/           # 右键菜单系统
+│  │  ├─ builders/
+│  │  ├─ components/
+│  │  └─ hooks/
+│  ├─ features/               # 主功能模块
+│  │  ├─ links/
+│  │  │  ├─ dialogs/
+│  │  │  │  └─ hooks/
+│  │  │  └─ grid/
+│  │  │     └─ hooks/
+│  │  ├─ search/
+│  │  └─ widgets/
+│  ├─ services/               # 数据与外部能力（storage/update/webdav）
+│  │  ├─ storage/
+│  │  ├─ update/
+│  │  └─ webdav/
+│  ├─ settings/               # 设置面板
+│  │  ├─ about/
+│  │  ├─ components/
+│  │  ├─ general/
+│  │  │  ├─ hooks/
+│  │  │  └─ sections/
+│  │  ├─ hooks/
+│  │  │  └─ useSettingsModal/
+│  │  ├─ layout/
+│  │  ├─ links/
+│  │  │  ├─ components/
+│  │  │  ├─ hooks/
+│  │  │  └─ sections/
+│  │  ├─ recovery/
+│  │  ├─ renderers/
+│  │  └─ tools/
+│  │     ├─ common/
+│  │     └─ pomodoro/
+│  │        ├─ components/
+│  │        └─ hooks/
+│  ├─ shared/                 # 共享组件/文案/工具
+│  │  ├─ components/
+│  │  ├─ texts/
+│  │  └─ utils/
+│  ├─ test/                   # 测试与测试夹具
+│  │  └─ fixtures/
+│  ├─ types/
+│  ├─ App.tsx
+│  ├─ main.tsx
+│  ├─ constants.ts
+│  └─ index.css
+├─ vite.config.ts / vitest.config.ts
+├─ tsconfig*.json
+└─ package.json
 ```
 
 ## 🤝 贡献
@@ -133,3 +164,7 @@ NewTab/                      # 项目根目录
 ## 📄 许可证
 
 本项目基于 [MIT License](LICENSE) 开源。
+
+## 📈 代码质量评分
+
+<img src="scorecard.png" width="100%">

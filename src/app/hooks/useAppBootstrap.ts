@@ -26,6 +26,7 @@ export const useAppBootstrap = (): UseAppBootstrapResult => {
         console.error('加载设置失败:', error);
         setSettings(DEFAULT_SETTINGS);
         setAdaptiveTheme(DEFAULT_SETTINGS.theme);
+        return;
       } finally {
         setLoaded(true);
       }

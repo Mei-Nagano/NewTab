@@ -85,7 +85,22 @@ export const LinksTab: React.FC<LinksTabProps> = ({
     });
   };
 
-  const handleSubmitLink = () => { linkActions.saveLink(form, editingLinkId); setForm(EMPTY_FORM); setEditingLinkId(null); };
+  const handleSubmitLink = () => {
+    const result = linkActions.saveLink(form, editingLinkId);
+    if (result === 'saved') {
+      setForm(EMPTY_FORM);
+      setEditingLinkId(null);
+      return;
+    }
+
+    if (result === 'duplicate') {
+      setAlertDialog({
+        isOpen: true,
+        title: '链接已存在',
+        message: '检测到重复链接，已跳过添加。',
+      });
+    }
+  };
   const startEditLink = (link: Link) => { if (isAllGroupSelected) return; setForm({ title: link.title, url: link.url, icon: link.icon || '' }); setEditingLinkId(link.id); };
 
   if (!activeGroup) return <div className="p-8 text-center text-gray-500">加载中...</div>;

@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { LinkGrid } from '@/features/links/grid/LinkGrid';
+import { SELECTED_GROUP_STORAGE_KEY } from '@/features/links/grid/constants';
 
 const GROUP_ID = 'g-work';
-const STORAGE_KEY = 'newtab_selected_group_id';
 
 const groups = [
   {
@@ -20,7 +20,7 @@ const groups = [
 
 describe('LinkGrid group selection persistence', () => {
   it('restores selected group after remount', () => {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SELECTED_GROUP_STORAGE_KEY);
 
     const { unmount } = render(
       <LinkGrid groups={groups} theme="light" linkDisplayMode="scroll" />
@@ -29,7 +29,7 @@ describe('LinkGrid group selection persistence', () => {
     fireEvent.click(screen.getByText('工作'));
     expect(screen.getByText('工作台')).not.toBeNull();
     expect(screen.queryByText('生活台')).toBeNull();
-    expect(localStorage.getItem(STORAGE_KEY)).toBe(GROUP_ID);
+    expect(localStorage.getItem(SELECTED_GROUP_STORAGE_KEY)).toBe(GROUP_ID);
 
     unmount();
 

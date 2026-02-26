@@ -11,8 +11,9 @@ export const usePomodoroAudio = () => {
     if (!audioRef.current) return;
     try {
       await audioRef.current.play();
-    } catch (error) {
-      console.error('Audio play failed:', error);
+    } catch (_error) {
+      // Browser autoplay restrictions are expected in some contexts.
+      return;
     }
   };
 

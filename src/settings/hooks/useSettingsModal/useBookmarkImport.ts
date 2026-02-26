@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { AppSettings, Link, LinkGroup } from '@/types';
 import { getBrowserBookmarkFolders } from '@/services/storage';
+import { buildLinkDedupKeySet, normalizeLinkUrl, toLinkDedupKey } from '@/shared/utils';
 import type { BrowserBookmarkFolder } from '@/services/storage/bookmarkStore';
 import type { AlertConfig } from './types';
 
@@ -12,6 +13,7 @@ export interface BrowserBookmarkFolderView extends BrowserBookmarkFolder {
 
 interface UseBookmarkImportParams {
   activeGroupId: string;
+  tempSettings: AppSettings;
   setTempSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   setAlertConfig: React.Dispatch<React.SetStateAction<AlertConfig>>;
 }
@@ -19,7 +21,36 @@ interface UseBookmarkImportParams {
 const buildImportedLink = (link: Link): Link => ({
   ...link,
   id: `imported-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+  url: normalizeLinkUrl(link.url),
 });
+
+interface CollectUniqueLinksResult {
+  links: Link[];
+  duplicateCount: number;
+}
+
+const collectUniqueImportedLinks = (
+  links: Link[],
+  dedupKeys: Set<string>
+): CollectUniqueLinksResult => {
+  let duplicateCount = 0;
+  const uniqueLinks: Link[] = [];
+
+  links.forEach((link) => {
+    const dedupKey = toLinkDedupKey(link.url);
+    if (!dedupKey) return;
+
+    if (dedupKeys.has(dedupKey)) {
+      duplicateCount += 1;
+      return;
+    }
+
+    dedupKeys.add(dedupKey);
+    uniqueLinks.push(buildImportedLink(link));
+  });
+
+  return { links: uniqueLinks, duplicateCount };
+};
 
 const createUniqueGroupTitle = (baseTitle: string, usedTitles: Set<string>): string => {
   const normalized = baseTitle.trim() || '导入分组';
@@ -32,6 +63,7 @@ const createUniqueGroupTitle = (baseTitle: string, usedTitles: Set<string>): str
 
 export const useBookmarkImport = ({
   activeGroupId,
+  tempSettings,
   setTempSettings,
   setAlertConfig,
 }: UseBookmarkImportParams) => {
@@ -158,40 +190,73 @@ export const useBookmarkImport = ({
 
     if (folderSelection.length === 0) return;
 
-    setTempSettings((previous) => {
-      if (importTarget === 'current-group') {
-        const targetExists = previous.groups.some((group) => group.id === activeGroupId);
-        if (!targetExists) {
-          setAlertConfig({ isOpen: true, title: '提示', message: '当前分组不存在，请重新选择后再导入。' });
-          return previous;
-        }
+    const dedupKeys = buildLinkDedupKeySet(tempSettings.groups);
+    let importedCount = 0;
+    let duplicateCount = 0;
+    let nextGroups = tempSettings.groups;
 
-        return {
-          ...previous,
-          groups: previous.groups.map((group) =>
-            group.id === activeGroupId
-              ? { ...group, links: [...group.links, ...folderSelection.flatMap((item) => item.links.map(buildImportedLink))] }
-              : group
-          ),
-        };
+    if (importTarget === 'current-group') {
+      const targetExists = tempSettings.groups.some((group) => group.id === activeGroupId);
+      if (!targetExists) {
+        setAlertConfig({
+          isOpen: true,
+          title: '提示',
+          message: '当前分组不存在，请重新选择后再导入。',
+        });
+        return;
       }
 
-      const usedTitles = new Set(previous.groups.map((group) => group.title));
-      const importedGroups: LinkGroup[] = folderSelection.map(({ folder, links }, index) => {
+      const selectedLinks = folderSelection.flatMap((item) => item.links);
+      const uniqueImport = collectUniqueImportedLinks(selectedLinks, dedupKeys);
+      importedCount = uniqueImport.links.length;
+      duplicateCount = uniqueImport.duplicateCount;
+      if (importedCount === 0) {
+        setAlertConfig({ isOpen: true, title: '提示', message: '所选链接都已存在，未导入新链接。' });
+        return;
+      }
+
+      nextGroups = tempSettings.groups.map((group) =>
+        group.id === activeGroupId
+          ? { ...group, links: [...group.links, ...uniqueImport.links] }
+          : group
+      );
+    } else {
+      const usedTitles = new Set(tempSettings.groups.map((group) => group.title));
+      const importedGroups: LinkGroup[] = folderSelection.flatMap(({ folder, links }, index) => {
+        const uniqueImport = collectUniqueImportedLinks(links, dedupKeys);
+        duplicateCount += uniqueImport.duplicateCount;
+        if (uniqueImport.links.length === 0) return [];
+
+        importedCount += uniqueImport.links.length;
         const title = createUniqueGroupTitle(folder.title, usedTitles);
         usedTitles.add(title);
-        return {
+        return [{
           id: `g-import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
           title,
-          links: links.map(buildImportedLink),
-        };
+          links: uniqueImport.links,
+        }];
       });
 
-      return {
-        ...previous,
-        groups: [...previous.groups, ...importedGroups],
-      };
+      if (importedGroups.length === 0) {
+        setAlertConfig({ isOpen: true, title: '提示', message: '所选链接都已存在，未导入新链接。' });
+        return;
+      }
+
+      nextGroups = [...tempSettings.groups, ...importedGroups];
+    }
+
+    setTempSettings({
+      ...tempSettings,
+      groups: nextGroups,
     });
+
+    if (duplicateCount > 0) {
+      setAlertConfig({
+        isOpen: true,
+        title: '提示',
+        message: `已导入 ${importedCount} 条链接，自动跳过 ${duplicateCount} 条重复链接。`,
+      });
+    }
 
     clearImportState();
   };

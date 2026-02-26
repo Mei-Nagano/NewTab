@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { createSettingsFixture } from './fixtures/settings';
 import { useGroupActions } from '@/settings/links/hooks/useGroupActions';
+import { useLinkActions } from '@/settings/links/hooks/useLinkActions';
 import { useSelection } from '@/settings/links/hooks/useSelection';
 
 describe('settings links hooks', () => {
@@ -50,5 +51,38 @@ describe('settings links hooks', () => {
 
     act(() => deleteHook.result.current.deleteGroup(latest.groups[1].id));
     expect(onSettingsChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('useLinkActions skips duplicate links when adding', () => {
+    const settings = createSettingsFixture({
+      groups: [
+        {
+          id: 'g-a',
+          title: 'A',
+          links: [{ id: 'l-1', title: 'Example', url: 'https://example.com/' }],
+        },
+      ],
+    });
+    const onSettingsChange = vi.fn();
+
+    const { result } = renderHook(() =>
+      useLinkActions({
+        settings,
+        activeGroupId: 'g-a',
+        isAllGroupSelected: false,
+        onSettingsChange,
+      })
+    );
+
+    let saveResult: ReturnType<typeof result.current.saveLink> | undefined;
+    act(() => {
+      saveResult = result.current.saveLink(
+        { title: 'Duplicate', url: 'example.com', icon: '' },
+        null
+      );
+    });
+
+    expect(saveResult).toBe('duplicate');
+    expect(onSettingsChange).not.toHaveBeenCalled();
   });
 });
