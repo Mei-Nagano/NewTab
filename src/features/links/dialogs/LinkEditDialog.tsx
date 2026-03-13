@@ -19,12 +19,24 @@ export const LinkEditDialog: React.FC<LinkEditDialogProps> = ({
 }) => {
   const form = useLinkEditForm(link);
   const isLight = theme === 'light';
+  const canSave = Boolean(form.title.trim() && form.url.trim());
+  const enabledSaveClass = isLight
+    ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-200'
+    : 'bg-white text-gray-900 hover:bg-gray-200 shadow-white/5';
+  const saveButtonClass = canSave
+    ? enabledSaveClass
+    : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none';
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onContextMenu={(event) => event.preventDefault()}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-in" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="关闭编辑链接弹窗"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md animate-fade-in"
+        onClick={onClose}
+      />
       <div className={`relative w-full max-w-sm border transition-all duration-500 shadow-2xl overflow-hidden animate-slide-up rounded-[2.5rem] ${isLight ? 'bg-white/90 border-gray-100' : 'bg-gray-950/90 border-white/10'
         }`}>
         <div className="p-8 pt-10">
@@ -68,11 +80,8 @@ export const LinkEditDialog: React.FC<LinkEditDialogProps> = ({
                 onSave(nextLink);
                 onClose();
               }}
-              disabled={!form.title.trim() || !form.url.trim()}
-              className={`flex-[1.5] py-4 text-sm font-black rounded-2xl transition-all duration-300 shadow-xl ${form.title.trim() && form.url.trim()
-                ? (isLight ? 'bg-gray-900 text-white hover:bg-gray-800 shadow-gray-200' : 'bg-white text-gray-900 hover:bg-gray-200 shadow-white/5')
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none'
-                }`}
+              disabled={!canSave}
+              className={`flex-[1.5] py-4 text-sm font-black rounded-2xl transition-all duration-300 shadow-xl ${saveButtonClass}`}
             >
               保存修改
             </button>

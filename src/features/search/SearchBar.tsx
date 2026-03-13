@@ -10,6 +10,25 @@ interface SearchBarProps {
   theme: Theme;
 }
 
+const getInputClass = (isLight: boolean, isFocused: boolean, isDropdownOpen: boolean): string => {
+  const isActive = isFocused || isDropdownOpen;
+  if (isActive) {
+    return isLight
+      ? 'text-slate-800 placeholder-slate-400'
+      : 'text-gray-100 placeholder-gray-500';
+  }
+  return isLight
+    ? 'text-slate-700 placeholder-slate-500'
+    : 'text-white/90 placeholder-white/30';
+};
+
+const getButtonClass = (isLight: boolean, isFocused: boolean): string => {
+  if (isFocused) return 'text-gray-500 hover:text-blue-600 hover:bg-blue-50';
+  return isLight
+    ? 'text-gray-600 hover:text-gray-900'
+    : 'text-white/70 hover:text-white';
+};
+
 export const SearchBar: React.FC<SearchBarProps> = ({ engine, onEngineChange, theme }) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -31,7 +50,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({ engine, onEngineChange, th
     event.preventDefault();
     const trimmed = query.trim();
     if (!trimmed) return;
-    window.location.href = buildSearchUrl(engine, trimmed);
+    const nextUrl = new URL(buildSearchUrl(engine, trimmed));
+    if (nextUrl.protocol !== 'https:') return;
+    globalThis.location.assign(nextUrl.toString());
   };
 
   const isLight = theme === 'light';
@@ -41,19 +62,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ engine, onEngineChange, th
   const baseClass = isLight
     ? 'bg-white/60 backdrop-blur-xl hover:bg-white/80 border border-white/40 shadow-lg shadow-gray-200/50'
     : 'bg-black/20 backdrop-blur-xl hover:bg-black/30 border border-white/5 shadow-lg shadow-black/20';
-  const inputClass =
-    isFocused || isDropdownOpen
-      ? isLight
-        ? 'text-slate-800 placeholder-slate-400'
-        : 'text-gray-100 placeholder-gray-500'
-      : isLight
-        ? 'text-slate-700 placeholder-slate-500'
-        : 'text-white/90 placeholder-white/30';
-  const buttonClass = isFocused
-    ? 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-    : isLight
-      ? 'text-gray-600 hover:text-gray-900'
-      : 'text-white/70 hover:text-white';
+  const inputClass = getInputClass(isLight, isFocused, isDropdownOpen);
+  const buttonClass = getButtonClass(isLight, isFocused);
 
   return (
     <form ref={containerRef} onSubmit={handleSubmit} className="w-full max-w-lg relative z-20">

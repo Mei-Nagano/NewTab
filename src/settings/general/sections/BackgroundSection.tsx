@@ -1,5 +1,11 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AppSettings } from '@/types';
+import {
+  listFavoriteWallpapers,
+  removeFavoriteWallpaper,
+  saveFavoriteWallpaper,
+  type FavoriteWallpaper,
+} from '@/services/storage';
 import { Switch } from '@/shared/components/Switch';
 import { SettingSection } from '../../components/SettingSection';
 import { useBgUpload } from '../hooks/useBgUpload';
@@ -8,6 +14,7 @@ import { BACKGROUND_OPTIONS } from '../options';
 interface BackgroundSectionProps {
   settings: AppSettings;
   theme: 'light' | 'dark';
+  backgroundImage?: string;
   onSettingsChange: (settings: AppSettings) => void;
   onSaveWallpaper?: () => void;
 }
@@ -22,15 +29,113 @@ const DEFAULT_DARK_MASK_OPACITY = 40;
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
 
+const sectionTextMutedClass = (isLight: boolean): string =>
+  isLight ? 'text-gray-500' : 'text-gray-400';
+
+const optionCardClass = (isLight: boolean, isSelected: boolean): string => {
+  if (isSelected) {
+    return 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/10';
+  }
+  return isLight
+    ? 'border-gray-200 bg-white hover:border-blue-300'
+    : 'border-white/10 bg-white/5 hover:bg-white/10';
+};
+
+const customUrlInputClass = (isLight: boolean): string =>
+  isLight
+    ? 'bg-white border-gray-100 text-gray-900 focus:border-blue-500'
+    : 'bg-black/20 border-white/5 text-white focus:border-blue-500/50';
+
+const uploadButtonClass = (isLight: boolean): string =>
+  isLight
+    ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10';
+
+const switchCardClass = (isLight: boolean): string =>
+  isLight
+    ? 'border-gray-200 bg-white hover:border-blue-200 shadow-sm'
+    : 'border-white/5 bg-white/5 hover:bg-white/[0.08]';
+
+const switchTitleClass = (isLight: boolean): string =>
+  isLight ? 'text-gray-900' : 'text-gray-100';
+
+const sliderLabelClass = (isLight: boolean): string =>
+  isLight ? 'text-gray-600' : 'text-gray-300';
+
+const sliderContainerClass = (isLight: boolean, isEnabled: boolean): string => {
+  const base = isLight
+    ? 'border-gray-200 bg-white shadow-sm'
+    : 'border-white/5 bg-white/5';
+  const visibility = isEnabled ? '' : 'opacity-60';
+  return `p-4 px-5 rounded-2xl border transition-all duration-300 ${base} ${visibility}`.trim();
+};
+
+const favoriteCardClass = (isLight: boolean): string =>
+  isLight
+    ? 'border-gray-200 bg-white shadow-sm'
+    : 'border-white/10 bg-white/5';
+
+const favoriteActionClass = (isLight: boolean): string =>
+  isLight
+    ? 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+    : 'border-white/10 bg-white/5 text-gray-200 hover:bg-white/10';
+
+const formatFavoriteDate = (value: string): string => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '已收藏';
+  }
+  return `收藏于 ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
+const toSafeWallpaperUrl = (value: string): string | null => {
+  if (!value) return null;
+  if (value.startsWith('data:image/') || value.startsWith('blob:')) return value;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const downloadWallpaper = async (backgroundImage: string) => {
+  const safeWallpaperUrl = toSafeWallpaperUrl(backgroundImage);
+  if (!safeWallpaperUrl) return;
+
+  try {
+    const response = await fetch(safeWallpaperUrl);
+    const blob = await response.blob();
+    const url = globalThis.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `wallpaper-${new Date().toISOString().split('T')[0]}.${blob.type.split('/')[1] || 'jpg'}`;
+    link.click();
+    globalThis.URL.revokeObjectURL(url);
+  } catch {
+    const link = document.createElement('a');
+    link.href = safeWallpaperUrl;
+    link.download = `wallpaper-${Date.now()}`;
+    link.click();
+  }
+};
+
 export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
   settings,
   theme,
+  backgroundImage,
   onSettingsChange,
   onSaveWallpaper,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleUpload = useBgUpload(settings, onSettingsChange);
   const isLight = theme === 'light';
+  const [favorites, setFavorites] = useState<FavoriteWallpaper[]>([]);
+  const [favoriteStatus, setFavoriteStatus] = useState('');
   const hasLocalUploadedImage =
     settings.customBgUrl?.startsWith('data:') ||
     settings.customBgUrl === '[LOCAL_IMAGE]';
@@ -44,10 +149,52 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
     MIN_DARK_MASK_OPACITY,
     MAX_DARK_MASK_OPACITY
   );
+  const blurEnabled = Boolean(settings.bgBlur);
+  const darkMaskEnabled = Boolean(settings.enableDarkMask);
+
+  useEffect(() => {
+    void listFavoriteWallpapers().then(setFavorites);
+  }, []);
+
+  const handleFavoriteCurrentWallpaper = async () => {
+    if (!backgroundImage) {
+      setFavoriteStatus('当前还没有可收藏的壁纸');
+      return;
+    }
+
+    const result = await saveFavoriteWallpaper(backgroundImage);
+    if (result === 'added') {
+      const nextFavorites = await listFavoriteWallpapers();
+      setFavorites(nextFavorites);
+      setFavoriteStatus('当前壁纸已加入收藏');
+      return;
+    }
+    if (result === 'exists') {
+      setFavoriteStatus('这张壁纸已经收藏过了');
+      return;
+    }
+    setFavoriteStatus('收藏失败，当前壁纸可能不支持本地保存');
+  };
+
+  const handleApplyFavorite = (favorite: FavoriteWallpaper) => {
+    onSettingsChange({
+      ...settings,
+      bgType: 'custom',
+      customBgUrl: favorite.image,
+    });
+    setFavoriteStatus('已切换到收藏壁纸，保存设置后生效');
+  };
+
+  const handleRemoveFavorite = async (favoriteId: string) => {
+    await removeFavoriteWallpaper(favoriteId);
+    const nextFavorites = await listFavoriteWallpapers();
+    setFavorites(nextFavorites);
+    setFavoriteStatus('已移除收藏壁纸');
+  };
 
   return (
     <SettingSection
-      title={'\u80cc\u666f\u4e0e\u89c6\u89c9'}
+      title={'背景与视觉'}
       theme={theme}
     >
       <div className="grid grid-cols-3 gap-4">
@@ -55,20 +202,10 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
           <button
             key={item.value}
             onClick={() => onSettingsChange({ ...settings, bgType: item.value })}
-            className={`p-4 rounded-2xl border text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
-              settings.bgType === item.value
-                ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/10'
-                : isLight
-                  ? 'border-gray-200 bg-white hover:border-blue-300'
-                  : 'border-white/10 bg-white/5 hover:bg-white/10'
-            }`}
+            className={`p-4 rounded-2xl border text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${optionCardClass(isLight, settings.bgType === item.value)}`}
           >
             <div className="text-sm font-bold">{item.label}</div>
-            <div
-              className={`text-[11px] font-medium ${
-                isLight ? 'text-gray-600' : 'text-gray-400'
-              }`}
-            >
+            <div className={`text-[11px] font-medium ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>
               {item.desc}
             </div>
           </button>
@@ -83,26 +220,18 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
               onChange={(event) =>
                 onSettingsChange({ ...settings, customBgUrl: event.target.value })
               }
-              className={`flex-1 px-4 py-3 rounded-xl border text-sm transition-all focus:ring-2 focus:ring-blue-500/20 ${
-                isLight
-                  ? 'bg-white border-gray-100 text-gray-900 focus:border-blue-500'
-                  : 'bg-black/20 border-white/5 text-white focus:border-blue-500/50'
-              }`}
+              className={`flex-1 px-4 py-3 rounded-xl border text-sm transition-all focus:ring-2 focus:ring-blue-500/20 ${customUrlInputClass(isLight)}`}
               placeholder={
                 hasLocalUploadedImage
-                  ? '\u5df2\u4f7f\u7528\u672c\u5730\u56fe\u7247\uff0c\u8f93\u5165 URL \u5c06\u8986\u76d6'
-                  : '\u8f93\u5165\u56fe\u7247 URL'
+                  ? '已使用本地图片，输入 URL 将覆盖'
+                  : '输入图片 URL'
               }
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className={`px-4 py-3 rounded-xl border text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                isLight
-                  ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                  : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
-              }`}
+              className={`px-4 py-3 rounded-xl border text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${uploadButtonClass(isLight)}`}
             >
-              {'\u4e0a\u4f20\u56fe\u7247'}
+              {'上传图片'}
             </button>
           </div>
           <input
@@ -113,41 +242,25 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
             onChange={handleUpload}
           />
           {hasLocalUploadedImage && (
-            <p className={`text-xs ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-              {
-                '\u5f53\u524d\u4f7f\u7528\u7684\u662f\u672c\u5730\u4e0a\u4f20\u56fe\u7247\uff0c\u76f4\u63a5\u8f93\u5165\u94fe\u63a5\u5373\u53ef\u5207\u6362\u4e3a\u7f51\u7edc\u56fe\u7247\u3002'
-              }
+            <p className={`text-xs ${sectionTextMutedClass(isLight)}`}>
+              {'当前使用的是本地上传图片，直接输入链接即可切换为网络图片。'}
             </p>
           )}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div
-          className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all duration-300 ${
-            isLight
-              ? 'border-gray-200 bg-white hover:border-blue-200 shadow-sm'
-              : 'border-white/5 bg-white/5 hover:bg-white/[0.08]'
-          }`}
-        >
+        <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all duration-300 ${switchCardClass(isLight)}`}>
           <div className="flex-1 pr-4">
-            <div
-              className={`text-sm font-bold ${
-                isLight ? 'text-gray-900' : 'text-gray-100'
-              }`}
-            >
-              {'\u80cc\u666f\u6a21\u7cca'}
+            <div className={`text-sm font-bold ${switchTitleClass(isLight)}`}>
+              {'背景模糊'}
             </div>
-            <div
-              className={`text-[11px] mt-0.5 font-medium ${
-                isLight ? 'text-gray-500' : 'text-gray-400'
-              }`}
-            >
-              {'\u4e3a\u58c1\u7eb8\u6dfb\u52a0\u6bdb\u73bb\u7483\u6548\u679c'}
+            <div className={`text-[11px] mt-0.5 font-medium ${sectionTextMutedClass(isLight)}`}>
+              {'为壁纸添加毛玻璃效果'}
             </div>
           </div>
           <Switch
-            checked={!!settings.bgBlur}
+            checked={blurEnabled}
             onChange={(checked) =>
               onSettingsChange({
                 ...settings,
@@ -160,33 +273,17 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
           />
         </div>
 
-        <div
-          className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all duration-300 ${
-            isLight
-              ? 'border-gray-200 bg-white hover:border-blue-200 shadow-sm'
-              : 'border-white/5 bg-white/5 hover:bg-white/[0.08]'
-          }`}
-        >
+        <div className={`flex items-center justify-between p-4 px-5 rounded-2xl border transition-all duration-300 ${switchCardClass(isLight)}`}>
           <div className="flex-1 pr-4">
-            <div
-              className={`text-sm font-bold ${
-                isLight ? 'text-gray-900' : 'text-gray-100'
-              }`}
-            >
-              {'\u591c\u95f4\u906e\u7f69'}
+            <div className={`text-sm font-bold ${switchTitleClass(isLight)}`}>
+              {'夜间遮罩'}
             </div>
-            <div
-              className={`text-[11px] mt-0.5 font-medium ${
-                isLight ? 'text-gray-500' : 'text-gray-400'
-              }`}
-            >
-              {
-                '\u964d\u4f4e\u4eae\u8272\u58c1\u7eb8\u5728\u591c\u95f4\u6a21\u5f0f\u4e0b\u7684\u523a\u773c\u7a0b\u5ea6'
-              }
+            <div className={`text-[11px] mt-0.5 font-medium ${sectionTextMutedClass(isLight)}`}>
+              {'降低亮色壁纸在夜间模式下的刺眼程度'}
             </div>
           </div>
           <Switch
-            checked={!!settings.enableDarkMask}
+            checked={darkMaskEnabled}
             onChange={(checked) =>
               onSettingsChange({
                 ...settings,
@@ -201,18 +298,10 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div
-          className={`p-4 px-5 rounded-2xl border transition-all duration-300 ${
-            isLight ? 'border-gray-200 bg-white shadow-sm' : 'border-white/5 bg-white/5'
-          } ${!settings.bgBlur ? 'opacity-60' : ''}`}
-        >
+        <div className={sliderContainerClass(isLight, blurEnabled)}>
           <div className="flex items-center justify-between gap-3 mb-2">
-            <span
-              className={`text-xs font-bold uppercase tracking-wide ${
-                isLight ? 'text-gray-600' : 'text-gray-300'
-              }`}
-            >
-              {'\u6a21\u7cca\u5f3a\u5ea6'}
+            <span className={`text-xs font-bold uppercase tracking-wide ${sliderLabelClass(isLight)}`}>
+              {'模糊强度'}
             </span>
             <span className={`text-xs font-bold ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
               {blurAmount}px
@@ -224,7 +313,7 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
             max={MAX_BLUR_AMOUNT}
             step={1}
             value={blurAmount}
-            disabled={!settings.bgBlur}
+            disabled={!blurEnabled}
             onChange={(event) =>
               onSettingsChange({ ...settings, bgBlurAmount: Number(event.target.value) })
             }
@@ -232,18 +321,10 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
           />
         </div>
 
-        <div
-          className={`p-4 px-5 rounded-2xl border transition-all duration-300 ${
-            isLight ? 'border-gray-200 bg-white shadow-sm' : 'border-white/5 bg-white/5'
-          } ${!settings.enableDarkMask ? 'opacity-60' : ''}`}
-        >
+        <div className={sliderContainerClass(isLight, darkMaskEnabled)}>
           <div className="flex items-center justify-between gap-3 mb-2">
-            <span
-              className={`text-xs font-bold uppercase tracking-wide ${
-                isLight ? 'text-gray-600' : 'text-gray-300'
-              }`}
-            >
-              {'\u906e\u7f69\u5f3a\u5ea6'}
+            <span className={`text-xs font-bold uppercase tracking-wide ${sliderLabelClass(isLight)}`}>
+              {'遮罩强度'}
             </span>
             <span className={`text-xs font-bold ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
               {darkMaskOpacity}%
@@ -255,7 +336,7 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
             max={MAX_DARK_MASK_OPACITY}
             step={1}
             value={darkMaskOpacity}
-            disabled={!settings.enableDarkMask}
+            disabled={!darkMaskEnabled}
             onChange={(event) =>
               onSettingsChange({ ...settings, darkMaskOpacity: Number(event.target.value) })
             }
@@ -264,16 +345,94 @@ export const BackgroundSection: React.FC<BackgroundSectionProps> = ({
         </div>
       </div>
 
-      <button
-        onClick={onSaveWallpaper}
-        className={`w-full px-4 py-3 rounded-xl border text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99] ${
-          isLight
-            ? 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-            : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
-        }`}
-      >
-        {'\u4fdd\u5b58\u5f53\u524d\u58c1\u7eb8'}
-      </button>
+      <div className={`p-4 rounded-2xl border space-y-4 ${favoriteCardClass(isLight)}`}>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className={`text-sm font-bold ${switchTitleClass(isLight)}`}>当前壁纸</div>
+            <div className={`text-[11px] font-medium ${sectionTextMutedClass(isLight)}`}>
+              Bing 每日壁纸会在当天本地缓存，第二天自动失效并拉取新图。
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleFavoriteCurrentWallpaper}
+              disabled={!backgroundImage}
+              className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${favoriteActionClass(isLight)}`}
+            >
+              收藏当前壁纸
+            </button>
+            <button
+              onClick={onSaveWallpaper}
+              disabled={!backgroundImage}
+              className={`px-4 py-2 rounded-xl border text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${favoriteActionClass(isLight)}`}
+            >
+              下载当前壁纸
+            </button>
+          </div>
+        </div>
+        {favoriteStatus && (
+          <p className={`text-xs ${sectionTextMutedClass(isLight)}`}>{favoriteStatus}</p>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className={`text-sm font-bold ${switchTitleClass(isLight)}`}>壁纸收藏</div>
+            <div className={`text-[11px] font-medium ${sectionTextMutedClass(isLight)}`}>
+              可直接更换为收藏壁纸，或者单独下载到本地。
+            </div>
+          </div>
+          <span className={`text-xs font-bold ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>
+            {favorites.length} 张
+          </span>
+        </div>
+
+        {favorites.length === 0 ? (
+          <div className={`p-4 rounded-2xl border text-sm ${favoriteCardClass(isLight)} ${sectionTextMutedClass(isLight)}`}>
+            还没有收藏壁纸，先从当前壁纸开始收藏吧。
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {favorites.map((favorite) => (
+              <div key={favorite.id} className={`rounded-2xl border overflow-hidden ${favoriteCardClass(isLight)}`}>
+                <div
+                  className="h-36 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${favorite.image})` }}
+                />
+                <div className="p-4 space-y-3">
+                  <div>
+                    <div className={`text-sm font-bold ${switchTitleClass(isLight)}`}>收藏壁纸</div>
+                    <div className={`text-[11px] font-medium ${sectionTextMutedClass(isLight)}`}>
+                      {formatFavoriteDate(favorite.addedAt)}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleApplyFavorite(favorite)}
+                      className={`px-3 py-2 rounded-xl border text-sm font-bold transition-all ${favoriteActionClass(isLight)}`}
+                    >
+                      设为当前
+                    </button>
+                    <button
+                      onClick={() => void downloadWallpaper(favorite.image)}
+                      className={`px-3 py-2 rounded-xl border text-sm font-bold transition-all ${favoriteActionClass(isLight)}`}
+                    >
+                      下载
+                    </button>
+                    <button
+                      onClick={() => void handleRemoveFavorite(favorite.id)}
+                      className={`px-3 py-2 rounded-xl border text-sm font-bold transition-all ${isLight ? 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100' : 'border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/15'}`}
+                    >
+                      移除
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </SettingSection>
   );
 };

@@ -35,7 +35,7 @@ export const LinkEditForm: React.FC<LinkEditFormProps> = ({
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>网站标题</label>
+          <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>网站标题</p>
           <input
             type="text"
             value={title}
@@ -49,7 +49,7 @@ export const LinkEditForm: React.FC<LinkEditFormProps> = ({
         </div>
 
         <div className="space-y-2">
-          <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>网站链接</label>
+          <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>网站链接</p>
           <input
             type="text"
             value={url}

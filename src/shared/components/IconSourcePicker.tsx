@@ -90,7 +90,7 @@ export const IconSourcePicker: React.FC<IconSourcePickerProps> = ({
 
   return (
     <div className="space-y-3">
-      <label className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>图标来源</label>
+      <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>图标来源</p>
 
       <div className="grid grid-cols-3 gap-2">
         <button type="button" onClick={() => applyMode('auto')} className={tabClass(mode === 'auto')}>

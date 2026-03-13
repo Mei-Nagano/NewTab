@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DEFAULT_SETTINGS } from '@/constants';
+import { clearCachedFavicons } from '@/services/storage';
 import type { AppSettings } from '@/types';
 import type { AlertConfig } from './types';
 
@@ -13,16 +14,10 @@ export const useResetActions = ({ setTempSettings, setAlertConfig }: UseResetAct
   const [resetConfirmDialog, setResetConfirmDialog] = useState({ isOpen: false });
 
   const handleClearCache = () => {
-    const keys: string[] = [];
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (key && key.startsWith('newtab_fav_')) {
-        keys.push(key);
-      }
-    }
-    keys.forEach((key) => localStorage.removeItem(key));
-    setCacheClearStatus(`å·²æ¸…ç† ${keys.length} ä¸ªç¼“å­˜å›¾æ ‡`);
-    window.setTimeout(() => setCacheClearStatus(''), 2500);
+    void clearCachedFavicons().then((count) => {
+      setCacheClearStatus(`ÒÑÇåÀí ${count} ¸ö»º´æÍ¼±ê`);
+      window.setTimeout(() => setCacheClearStatus(''), 2500);
+    });
   };
 
   const handleResetSettings = () => {
@@ -37,8 +32,8 @@ export const useResetActions = ({ setTempSettings, setAlertConfig }: UseResetAct
     setResetConfirmDialog({ isOpen: false });
     setAlertConfig({
       isOpen: true,
-      title: 'è®¾ç½®å·²è¿˜åŸ',
-      message: 'å·²æ¢å¤é»˜è®¤è®¾ç½®ï¼Œå¹¶ä¿ç•™ä½ çš„åˆ†ç»„å’Œé“¾æ¥ã€‚',
+      title: 'ÉèÖÃÒÑ»¹Ô­',
+      message: 'ÒÑ»Ö¸´Ä¬ÈÏÉèÖÃ£¬²¢±£ÁôÄãµÄ·Ö×éºÍÁ´½Ó¡£',
     });
   };
 

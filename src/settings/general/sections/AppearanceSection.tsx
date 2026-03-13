@@ -18,7 +18,7 @@ export const AppearanceSection: React.FC<AppearanceSectionProps> = ({
   return (
     <SettingSection title="外观与布局" theme={theme} accentColor="bg-purple-500">
       <div className="space-y-4">
-        <label className={`text-[11px] font-bold uppercase tracking-wider px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>展示模式</label>
+        <p className={`text-[11px] font-bold uppercase tracking-wider px-1 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>展示模式</p>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onSettingsChange({ ...settings, linkDisplayMode: 'scroll' })}

@@ -1,6 +1,6 @@
 import type { AppSettings } from '@/types';
 import { ensureWebDavDirectory } from './connection';
-import { getAuthHeader, normalizeBackupUrl } from './helpers';
+import { getAuthHeader, normalizeBackupUrl, normalizeWebDavBaseUrl } from './helpers';
 
 const sanitizeBackupPayload = (settings: AppSettings): Omit<AppSettings, 'webdav'> => {
   const { webdav: _webdav, ...rest } = settings;
@@ -12,9 +12,10 @@ export const backupToWebDav = async (settings: AppSettings): Promise<void> => {
     throw new Error('WebDAV URL 未设置');
   }
 
-  await ensureWebDavDirectory(settings.webdav.url, settings.webdav);
+  const safeBaseUrl = normalizeWebDavBaseUrl(settings.webdav.url);
+  await ensureWebDavDirectory(safeBaseUrl, settings.webdav);
 
-  const response = await fetch(normalizeBackupUrl(settings.webdav.url), {
+  const response = await fetch(normalizeBackupUrl(safeBaseUrl), {
     method: 'PUT',
     headers: {
       Authorization: getAuthHeader(settings.webdav),

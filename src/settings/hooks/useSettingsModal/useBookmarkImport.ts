@@ -20,9 +20,15 @@ interface UseBookmarkImportParams {
 
 const buildImportedLink = (link: Link): Link => ({
   ...link,
-  id: `imported-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+  id: `imported-${Date.now()}-${createRandomIdSegment(8)}`,
   url: normalizeLinkUrl(link.url),
 });
+
+const createRandomIdSegment = (length: number): string => {
+  const bytes = new Uint8Array(length);
+  globalThis.crypto.getRandomValues(bytes);
+  return Array.from(bytes, (value) => (value % 36).toString(36)).join('');
+};
 
 interface CollectUniqueLinksResult {
   links: Link[];
@@ -193,7 +199,7 @@ export const useBookmarkImport = ({
     const dedupKeys = buildLinkDedupKeySet(tempSettings.groups);
     let importedCount = 0;
     let duplicateCount = 0;
-    let nextGroups = tempSettings.groups;
+    let nextGroups: LinkGroup[];
 
     if (importTarget === 'current-group') {
       const targetExists = tempSettings.groups.some((group) => group.id === activeGroupId);
@@ -231,7 +237,7 @@ export const useBookmarkImport = ({
         const title = createUniqueGroupTitle(folder.title, usedTitles);
         usedTitles.add(title);
         return [{
-          id: `g-import-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+          id: `g-import-${Date.now()}-${index}-${createRandomIdSegment(4)}`,
           title,
           links: uniqueImport.links,
         }];

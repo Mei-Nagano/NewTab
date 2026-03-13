@@ -48,7 +48,7 @@ export const PomodoroDisplay: React.FC<PomodoroDisplayProps> = ({
             max="120"
             value={duration}
             onChange={(event) =>
-              onDurationChange(Math.max(1, parseInt(event.target.value || '1', 10)))
+              onDurationChange(Math.max(1, Number.parseInt(event.target.value || '1', 10)))
             }
             className={`w-16 p-1 text-center text-sm rounded-lg border outline-none focus:ring-2 focus:ring-rose-500/20 ${inputClass}`}
           />

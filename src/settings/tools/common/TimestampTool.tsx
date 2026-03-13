@@ -32,8 +32,8 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
     };
 
     const handleTsConvert = () => {
-        const ts = parseInt(tsInput);
-        if (isNaN(ts)) {
+        const ts = Number.parseInt(tsInput, 10);
+        if (Number.isNaN(ts)) {
             setTsOutput('请输入有效的时间戳');
             return;
         }
@@ -43,7 +43,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
     const handleDateToTs = () => {
         try {
             const date = new Date(tsInput);
-            if (isNaN(date.getTime())) {
+            if (Number.isNaN(date.getTime())) {
                 setTsOutput('请输入有效的日期字符串');
                 return;
             }
@@ -77,7 +77,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                        <label className={`${hintTextClass} ml-1`}>转换工具</label>
+                        <p className={`${hintTextClass} ml-1`}>转换工具</p>
                         <input
                             type="text"
                             value={tsInput}
@@ -87,7 +87,7 @@ export const TimestampTool: React.FC<ToolProps> = ({ theme }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className={`${hintTextClass} ml-1`}>结果</label>
+                        <p className={`${hintTextClass} ml-1`}>结果</p>
                         <div className="relative">
                             <input
                                 readOnly

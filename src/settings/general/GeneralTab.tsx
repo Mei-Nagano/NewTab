@@ -6,6 +6,7 @@ import { SystemSection } from './sections/SystemSection';
 
 interface GeneralTabProps {
   settings: AppSettings;
+  backgroundImage?: string;
   onSettingsChange: (settings: AppSettings) => void;
   onClearCache: () => void;
   cacheClearStatus: string;
@@ -16,6 +17,7 @@ interface GeneralTabProps {
 
 export const GeneralTab: React.FC<GeneralTabProps> = ({
   settings,
+  backgroundImage,
   onSettingsChange,
   onClearCache,
   cacheClearStatus,
@@ -25,10 +27,21 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
 }) => {
   return (
     <div className="space-y-8 pb-4">
-      <BackgroundSection settings={settings} onSettingsChange={onSettingsChange} onSaveWallpaper={onSaveWallpaper} theme={theme} />
+      <BackgroundSection
+        settings={settings}
+        backgroundImage={backgroundImage}
+        onSettingsChange={onSettingsChange}
+        onSaveWallpaper={onSaveWallpaper}
+        theme={theme}
+      />
       <SearchSection settings={settings} onSettingsChange={onSettingsChange} theme={theme} />
       <AppearanceSection settings={settings} onSettingsChange={onSettingsChange} theme={theme} />
-      <SystemSection theme={theme} cacheClearStatus={cacheClearStatus} onClearCache={onClearCache} onResetSettings={onResetSettings} />
+      <SystemSection
+        theme={theme}
+        cacheClearStatus={cacheClearStatus}
+        onClearCache={onClearCache}
+        onResetSettings={onResetSettings}
+      />
     </div>
   );
 };

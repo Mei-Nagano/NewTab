@@ -71,8 +71,6 @@ export const SubMenu: React.FC<SubMenuProps> = ({ item, isLight, onClose, menuCl
         <div
             ref={triggerRef}
             className="relative w-full"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
         >
             <ContextMenuItem
                 id={item.id}
@@ -80,6 +78,10 @@ export const SubMenu: React.FC<SubMenuProps> = ({ item, isLight, onClose, menuCl
                 icon={item.icon}
                 isLight={isLight}
                 className={`justify-between ${triggerActiveClass}`}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onFocus={handleMouseEnter}
+                onBlur={handleMouseLeave}
                 onClick={(e: React.MouseEvent) => {
                     e?.stopPropagation();
                     // Click should toggle immediately, but also handle timer safety

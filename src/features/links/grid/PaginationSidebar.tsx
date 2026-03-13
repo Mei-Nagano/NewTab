@@ -12,6 +12,15 @@ interface PaginationSidebarProps {
   onMouseLeave: () => void;
 }
 
+const getPageDotClass = (isCurrent: boolean, isLight: boolean): string => {
+  if (isCurrent) {
+    return isLight ? 'bg-blue-500 h-7 w-2.5' : 'bg-blue-400 h-7 w-2.5';
+  }
+  return isLight
+    ? 'bg-slate-300 h-2 w-2 hover:bg-slate-400'
+    : 'bg-white/20 h-2 w-2 hover:bg-white/40';
+};
+
 export const PaginationSidebar: React.FC<PaginationSidebarProps> = ({
   theme,
   currentPage,
@@ -29,23 +38,24 @@ export const PaginationSidebar: React.FC<PaginationSidebarProps> = ({
   const buttonClass = isLight
     ? 'bg-white/40 border-white text-slate-600 hover:bg-white/80 disabled:opacity-30'
     : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/15 disabled:opacity-20';
+  const pages = Array.from({ length: totalPages }, (_, page) => page);
 
   return (
     <div
       data-testid="pagination-sidebar"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onPointerEnter={onMouseEnter}
+      onPointerLeave={onMouseLeave}
       className={`flex flex-col items-center animate-fade-in transition-all duration-300 ${isLight ? 'bg-white/35 border-white/50' : 'bg-black/20 border-white/10'} backdrop-blur-md border rounded-2xl ${isExpanded ? 'gap-4 px-2.5 py-3' : 'gap-2 px-2 py-2.5'}`}
     >
       <button onClick={onPrev} disabled={currentPage === 0} className={`${isExpanded ? 'p-2.5 rounded-full' : 'hidden'} transition-all duration-300 ${buttonClass} border disabled:cursor-not-allowed active:scale-90`}>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="18 15 12 9 6 15" /></svg>
       </button>
       <div className={`${isExpanded ? 'flex' : 'hidden'} flex-col items-center gap-2.5 max-h-[42vh] overflow-y-auto py-1`}>
-        {Array.from({ length: totalPages }).map((_, index) => (
+        {pages.map((page) => (
           <button
-            key={index}
-            onClick={() => onPageChange(index)}
-            className={`h-2 rounded-full transition-all duration-500 focus:outline-none ${currentPage === index ? (isLight ? 'bg-blue-500 h-7 w-2.5' : 'bg-blue-400 h-7 w-2.5') : isLight ? 'bg-slate-300 h-2 w-2 hover:bg-slate-400' : 'bg-white/20 h-2 w-2 hover:bg-white/40'}`}
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`h-2 rounded-full transition-all duration-500 focus:outline-none ${getPageDotClass(currentPage === page, isLight)}`}
           />
         ))}
       </div>

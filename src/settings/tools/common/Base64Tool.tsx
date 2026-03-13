@@ -40,7 +40,7 @@ export const Base64Tool: React.FC<ToolProps> = ({ theme }) => {
             <div className={styles.cardClass}>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className={labelClass}>输入</label>
+                        <p className={labelClass}>输入</p>
                         <textarea
                             value={base64Input}
                             onChange={(e) => setBase64Input(e.target.value)}
@@ -49,7 +49,7 @@ export const Base64Tool: React.FC<ToolProps> = ({ theme }) => {
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className={labelClass}>输出</label>
+                        <p className={labelClass}>输出</p>
                         <textarea
                             readOnly
                             value={base64Output}

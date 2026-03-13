@@ -22,10 +22,6 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   const state = useSettingsModal(props);
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
-  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
 
   useEffect(() => {
     if (state.isImportMode) return;
@@ -35,8 +31,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   if (!props.isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onContextMenu={handleContextMenu}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={props.onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="关闭设置弹窗"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={props.onClose}
+      />
 
       <SettingsFrame
         theme={props.theme}

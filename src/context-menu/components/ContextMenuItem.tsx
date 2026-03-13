@@ -5,6 +5,10 @@ interface ContextMenuItemProps {
     label: string | React.ReactNode;
     icon?: React.ReactNode;
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
+    onMouseEnter?: React.MouseEventHandler<HTMLButtonElement>;
+    onMouseLeave?: React.MouseEventHandler<HTMLButtonElement>;
+    onFocus?: React.FocusEventHandler<HTMLButtonElement>;
+    onBlur?: React.FocusEventHandler<HTMLButtonElement>;
     className?: string;
     isLight: boolean;
     checked?: boolean;
@@ -15,6 +19,10 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
     label,
     icon,
     onClick,
+    onMouseEnter,
+    onMouseLeave,
+    onFocus,
+    onBlur,
     className,
     isLight,
     checked,
@@ -29,6 +37,10 @@ export const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
     return (
         <button
             onClick={onClick}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onFocus={onFocus}
+            onBlur={onBlur}
             className={`${baseItemClass} ${themeClass} ${className || ''}`}
         >
             {shouldShowLeadingSlot && (

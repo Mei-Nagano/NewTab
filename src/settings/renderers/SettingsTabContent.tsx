@@ -51,7 +51,18 @@ export const SettingsTabContent: React.FC<SettingsTabContentProps> = (props) => 
   } = props;
 
   if (activeTab === 'general') {
-    return <GeneralTab settings={tempSettings} onSettingsChange={onSettingsChange} onClearCache={onClearCache} cacheClearStatus={cacheClearStatus} onResetSettings={onResetSettings} onSaveWallpaper={onSaveWallpaper} theme={theme} />;
+    return (
+      <GeneralTab
+        settings={tempSettings}
+        backgroundImage={backgroundImage}
+        onSettingsChange={onSettingsChange}
+        onClearCache={onClearCache}
+        cacheClearStatus={cacheClearStatus}
+        onResetSettings={onResetSettings}
+        onSaveWallpaper={onSaveWallpaper}
+        theme={theme}
+      />
+    );
   }
   if (activeTab === 'links') {
     return <LinksTab settings={tempSettings} onSettingsChange={onSettingsChange} activeGroupId={activeGroupId} setActiveGroupId={onGroupChange} onStartImport={onStartImport} isFetchingBookmarks={isFetchingBookmarks} theme={theme} />;

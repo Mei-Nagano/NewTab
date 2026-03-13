@@ -25,14 +25,30 @@ export const extractReleaseNotes = (html: string): string => {
   const notesMatch = html.match(/<div[^>]*class="[^"]*markdown-body[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
   if (!notesMatch?.[1]) return '';
 
-  return notesMatch[1]
-    .replace(/<[^>]+>/g, '')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\r\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+  const stripTags = (input: string): string => {
+    let result = '';
+    let inTag = false;
+    for (const char of input) {
+      if (char === '<') {
+        inTag = true;
+      } else if (char === '>') {
+        inTag = false;
+      } else if (!inTag) {
+        result += char;
+      }
+    }
+    return result;
+  };
+
+  const notesText = stripTags(notesMatch[1]);
+
+  return notesText
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('\r\n', '\n')
+    .replaceAll(/\n{3,}/g, '\n\n')
     .trim();
 };

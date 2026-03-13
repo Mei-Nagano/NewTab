@@ -2,9 +2,17 @@ import type { LinkGroup } from '@/types';
 
 const URL_PROTOCOL_PATTERN = /^[a-zA-Z][a-zA-Z\d+\-.]*:/;
 
+const trimTrailingSlashes = (value: string): string => {
+  let end = value.length;
+  while (end > 0 && value.codePointAt(end - 1) === 47) {
+    end -= 1;
+  }
+  return value.slice(0, end);
+};
+
 const normalizePathname = (pathname: string): string => {
   if (!pathname || pathname === '/') return '/';
-  return pathname.replace(/\/+$/, '') || '/';
+  return trimTrailingSlashes(pathname) || '/';
 };
 
 export const normalizeLinkUrl = (url: string): string => {

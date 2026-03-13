@@ -62,7 +62,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
       ref={menuRef}
       style={{ position: 'fixed', left: position.x, top: position.y, zIndex: 9999 }}
       className={`min-w-[220px] rounded-2xl p-1.5 flex flex-col animate-context-menu ${menuClass}`}
-      onContextMenu={(event) => event.preventDefault()}
+      role="menu"
+      aria-label="Context menu"
     >
       {menuItems.map((item) => {
         if (item.type === 'separator') {

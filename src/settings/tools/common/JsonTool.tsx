@@ -40,7 +40,7 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                            <label className={labelClass}>JSON 内容</label>
+                            <p className={labelClass}>JSON 内容</p>
                             <div className={`flex p-0.5 rounded-lg border transition-all ${theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-white/5 border-white/5'}`}>
                                 <button 
                                     onClick={() => setJsonFormatMode('pretty')}
@@ -70,7 +70,7 @@ export const JsonTool: React.FC<ToolProps> = ({ theme }) => {
                     
                     <div className="space-y-2">
                         <div className="flex justify-between items-center ml-1">
-                            <label className={labelClass}>格式化结果</label>
+                            <p className={labelClass}>格式化结果</p>
                         </div>
                         <textarea
                             readOnly

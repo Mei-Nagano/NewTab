@@ -15,7 +15,7 @@ export const useBackgroundManager = (settings: AppSettings, loaded: boolean): st
       if (settings.bgType === 'custom' && settings.customBgUrl) {
         next = settings.customBgUrl;
       } else if (settings.bgType === 'random') {
-        next = await fetchRandomWallpaper();
+        next = fetchRandomWallpaper();
       } else {
         next = await fetchBingWallpaper();
       }

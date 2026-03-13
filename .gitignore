@@ -31,3 +31,10 @@ logs/
 
 #opencode初始化文件
 AGENTS.md
+
+.npm-cache
+sonar-project.properties
+.scannerwork
+.sonarlint
+coverage/
+.sonar-user-home

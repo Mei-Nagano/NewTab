@@ -1,5 +1,5 @@
 import type { AppSettings, WebDavConfig } from '@/types';
-import { getAuthHeader, normalizeBackupUrl } from './helpers';
+import { getAuthHeader, normalizeBackupUrl, normalizeWebDavBaseUrl } from './helpers';
 
 export const restoreFromWebDav = async (
   config: WebDavConfig
@@ -8,7 +8,8 @@ export const restoreFromWebDav = async (
     throw new Error('WebDAV URL 未设置');
   }
 
-  const response = await fetch(normalizeBackupUrl(config.url), {
+  const safeBaseUrl = normalizeWebDavBaseUrl(config.url);
+  const response = await fetch(normalizeBackupUrl(safeBaseUrl), {
     method: 'GET',
     headers: {
       Authorization: getAuthHeader(config),

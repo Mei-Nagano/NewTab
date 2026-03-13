@@ -1,135 +1,271 @@
 import React, { useEffect, useState } from 'react';
+import { buildLegacyFaviconKey, loadCachedFavicon, saveCachedFavicon } from '@/services/storage';
 
-// é»˜è®¤å›¾æ ‡ç»„ä»¶
-const DefaultIcon: React.FC<{ title: string; size?: string; className?: string }> = ({
-    title,
-    size = "w-6 h-6",
-    className = "",
-}) => {
-    const normalizedTitle = title.trim();
-    const firstChar = normalizedTitle ? normalizedTitle.charAt(0).toUpperCase() : '';
-    const colors = [
-        'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500',
-        'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
-    ];
-    const colorIndex = normalizedTitle ? normalizedTitle.charCodeAt(0) % colors.length : 0;
-    const bgColor = colors[colorIndex];
+interface IconCandidate {
+  src: string;
+  persistLocally: boolean;
+}
 
-    if (!firstChar) {
-        return (
-            <div className={`${size} ${className} rounded-lg flex items-center justify-center bg-slate-300/70 text-slate-700 dark:bg-slate-700/70 dark:text-slate-200`}>
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-1/2 h-1/2"
-                >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l1.92-1.92a5 5 0 0 0-7.07-7.07L11.3 5.63" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-1.92 1.92a5 5 0 0 0 7.07 7.07l1.08-1.08" />
-                </svg>
-            </div>
-        );
-    }
-
-    return (
-        <div className={`${size} ${className} ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-sm leading-none`}>
-            {firstChar}
-        </div>
-    );
+const blobToDataUrl = async (blob: Blob): Promise<string> => {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error('Failed to read icon blob.'));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read icon blob.'));
+    reader.readAsDataURL(blob);
+  });
 };
 
-// ç½‘ç«™å›¾æ ‡ç»„ä»¶
-export const SiteIcon: React.FC<{
-    url: string;
-    title: string;
-    linkId?: string;
-    customIcon?: string;
-    size?: string;
-    className?: string;
-}> = ({ url, title, linkId, customIcon, size = "w-6 h-6", className = "" }) => {
-    const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
-    const [imgSrc, setImgSrc] = useState<string | null>(null);
+const fetchIconAsDataUrl = async (src: string, signal: AbortSignal): Promise<string> => {
+  const response = await fetch(src, { signal });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch icon: ${response.status}`);
+  }
 
-    useEffect(() => {
-        let isMounted = true;
-        let currentImg: HTMLImageElement | null = null;
+  const blob = await response.blob();
+  if (blob.size === 0) {
+    throw new Error('Fetched icon blob is empty.');
+  }
 
-        setStatus('loading');
-        setImgSrc(null);
+  const contentType = blob.type.toLowerCase();
+  if (contentType && !contentType.startsWith('image/')) {
+    throw new Error('Fetched content is not an image.');
+  }
 
-        const getSources = () => {
-            const sources: string[] = [];
-            if (customIcon) sources.push(customIcon);
+  return await blobToDataUrl(blob);
+};
 
-            const cacheKey = `newtab_fav_${linkId || url}`;
-            const cached = localStorage.getItem(cacheKey);
-            if (cached && cached !== customIcon) sources.push(cached);
+const loadImage = async (src: string, signal: AbortSignal): Promise<void> => {
+  return await new Promise<void>((resolve, reject) => {
+    const image = new Image();
 
-            try {
-                const urlObj = new URL(url);
-                const hostname = urlObj.hostname;
-                const apiSource = `https://api.iowen.cn/favicon/${hostname}.png`;
-                if (apiSource !== cached) sources.push(apiSource);
-                const originSource = `${urlObj.origin}/favicon.ico`;
-                if (originSource !== cached && originSource !== apiSource) sources.push(originSource);
-            } catch { /* invalid URL */ }
+    const cleanup = () => {
+      image.onload = null;
+      image.onerror = null;
+      signal.removeEventListener('abort', handleAbort);
+    };
 
-            return sources;
-        };
+    const handleAbort = () => {
+      cleanup();
+      reject(new DOMException('Aborted', 'AbortError'));
+    };
 
-        const sources = getSources();
-        if (sources.length === 0) {
-            setStatus('error');
-            return;
-        }
+    image.onload = () => {
+      cleanup();
+      resolve();
+    };
+    image.onerror = () => {
+      cleanup();
+      reject(new Error('Image failed to load.'));
+    };
 
-        const attemptLoad = (index: number) => {
-            if (!isMounted || index >= sources.length) {
-                if (isMounted) setStatus('error');
-                return;
-            }
-            const img = new Image();
-            currentImg = img;
-            img.src = sources[index];
-            img.onload = () => {
-                if (!isMounted) return;
-                setImgSrc(sources[index]);
-                setStatus('loaded');
-                if (sources[index] !== customIcon) {
-                    const cacheKey = `newtab_fav_${linkId || url}`;
-                    localStorage.setItem(cacheKey, sources[index]);
-                }
-            };
-            img.onerror = () => {
-                if (isMounted) attemptLoad(index + 1);
-            };
-        };
-
-        attemptLoad(0);
-
-        return () => {
-            isMounted = false;
-            if (currentImg) {
-                currentImg.onload = null;
-                currentImg.onerror = null;
-                currentImg = null;
-            }
-        };
-    }, [url, customIcon, linkId]);
-
-    if (status === 'loading' || status === 'error') {
-        return <DefaultIcon title={title} size={size} className={className} />;
+    signal.addEventListener('abort', handleAbort);
+    if (signal.aborted) {
+      handleAbort();
+      return;
     }
 
+    image.src = src;
+  });
+};
+
+const isAbortError = (error: unknown): boolean => {
+  return error instanceof DOMException && error.name === 'AbortError';
+};
+
+const getLegacyIconSource = (linkId: string | undefined, url: string): string => {
+  const cacheId = linkId || url;
+  if (!cacheId) {
+    return '';
+  }
+
+  return localStorage.getItem(buildLegacyFaviconKey(cacheId)) || '';
+};
+
+const getRemoteCandidates = (url: string, legacyIconSource: string): IconCandidate[] => {
+  const candidates: IconCandidate[] = [];
+
+  if (legacyIconSource) {
+    candidates.push({ src: legacyIconSource, persistLocally: true });
+  }
+
+  try {
+    const urlObj = new URL(url);
+    const originSource = `${urlObj.origin}/favicon.ico`;
+    const apiSource = `https://api.iowen.cn/favicon/${urlObj.hostname}.png`;
+
+    if (!legacyIconSource || legacyIconSource !== originSource) {
+      candidates.push({ src: originSource, persistLocally: true });
+    }
+
+    if (apiSource !== originSource && (!legacyIconSource || legacyIconSource !== apiSource)) {
+      candidates.push({ src: apiSource, persistLocally: true });
+    }
+  } catch {
+    return candidates;
+  }
+
+  return candidates;
+};
+
+// Ä¬ÈÏÍ¼±ê×é¼þ
+const DefaultIcon: React.FC<{ title: string; size?: string; className?: string }> = ({
+  title,
+  size = 'w-6 h-6',
+  className = '',
+}) => {
+  const normalizedTitle = title.trim();
+  const firstChar = normalizedTitle ? normalizedTitle.charAt(0).toUpperCase() : '';
+  const colors = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-red-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-indigo-500',
+    'bg-teal-500',
+  ];
+  const colorIndex = normalizedTitle ? (normalizedTitle.codePointAt(0) ?? 0) % colors.length : 0;
+  const bgColor = colors[colorIndex];
+
+  if (!firstChar) {
     return (
-        <img
-            src={imgSrc!}
-            alt={title}
-            className={`${size} object-cover ${className}`}
-        />
+      <div
+        className={`${size} ${className} rounded-lg flex items-center justify-center bg-slate-300/70 text-slate-700 dark:bg-slate-700/70 dark:text-slate-200`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="w-1/2 h-1/2"
+        >
+          <path d="M10 13a5 5 0 0 0 7.54.54l1.92-1.92a5 5 0 0 0-7.07-7.07L11.3 5.63" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-1.92 1.92a5 5 0 0 0 7.07 7.07l1.08-1.08" />
+        </svg>
+      </div>
     );
+  }
+
+  return (
+    <div
+      className={`${size} ${className} ${bgColor} rounded-lg flex items-center justify-center text-white font-bold text-sm leading-none`}
+    >
+      {firstChar}
+    </div>
+  );
+};
+
+// ÍøÕ¾Í¼±ê×é¼þ
+export const SiteIcon: React.FC<{
+  url: string;
+  title: string;
+  linkId?: string;
+  customIcon?: string;
+  size?: string;
+  className?: string;
+}> = ({ url, title, linkId, customIcon, size = 'w-6 h-6', className = '' }) => {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const abortController = new AbortController();
+
+    const applyLoadedSource = (src: string) => {
+      if (!isMounted) {
+        return;
+      }
+      setImgSrc(src);
+      setStatus('loaded');
+    };
+
+    const loadSiteIcon = async () => {
+      setStatus('loading');
+      setImgSrc(null);
+
+      if (customIcon) {
+        if (customIcon.startsWith('data:image/')) {
+          applyLoadedSource(customIcon);
+          return;
+        }
+
+        try {
+          await loadImage(customIcon, abortController.signal);
+          applyLoadedSource(customIcon);
+          return;
+        } catch (error) {
+          if (isAbortError(error)) {
+            return;
+          }
+        }
+      }
+
+      const cachedIcon = await loadCachedFavicon(url);
+      if (!isMounted) {
+        return;
+      }
+      if (cachedIcon) {
+        applyLoadedSource(cachedIcon);
+        return;
+      }
+
+      const remoteCandidates = getRemoteCandidates(url, getLegacyIconSource(linkId, url));
+      if (remoteCandidates.length === 0) {
+        setStatus('error');
+        return;
+      }
+
+      for (const candidate of remoteCandidates) {
+        try {
+          if (candidate.persistLocally) {
+            const dataUrl = await fetchIconAsDataUrl(candidate.src, abortController.signal);
+            await saveCachedFavicon(url, dataUrl);
+            applyLoadedSource(dataUrl);
+            return;
+          }
+        } catch (error) {
+          if (isAbortError(error)) {
+            return;
+          }
+        }
+
+        try {
+          await loadImage(candidate.src, abortController.signal);
+          applyLoadedSource(candidate.src);
+          return;
+        } catch (error) {
+          if (isAbortError(error)) {
+            return;
+          }
+        }
+      }
+
+      if (isMounted) {
+        setStatus('error');
+      }
+    };
+
+    void loadSiteIcon();
+
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [url, customIcon, linkId]);
+
+  if (status === 'loading' || status === 'error') {
+    return <DefaultIcon title={title} size={size} className={className} />;
+  }
+
+  return <img src={imgSrc || ''} alt={title} className={`${size} object-cover ${className}`} />;
 };

@@ -1,9 +1,10 @@
 import type { WebDavConfig } from '@/types';
-import { getAuthHeader } from './helpers';
+import { getAuthHeader, normalizeWebDavBaseUrl } from './helpers';
 
 export const checkWebDavConnection = async (config: WebDavConfig): Promise<boolean> => {
   try {
-    const response = await fetch(config.url.trim(), {
+    const safeUrl = normalizeWebDavBaseUrl(config.url);
+    const response = await fetch(safeUrl, {
       method: 'PROPFIND',
       headers: {
         Authorization: getAuthHeader(config),
@@ -21,7 +22,8 @@ export const ensureWebDavDirectory = async (
   baseUrl: string,
   config: WebDavConfig
 ): Promise<void> => {
-  const directoryUrl = baseUrl.trim().endsWith('/') ? baseUrl.trim() : `${baseUrl.trim()}/`;
+  const normalizedBase = normalizeWebDavBaseUrl(baseUrl);
+  const directoryUrl = normalizedBase.endsWith('/') ? normalizedBase : `${normalizedBase}/`;
   const headers = { Authorization: getAuthHeader(config) };
 
   const checkResponse = await fetch(directoryUrl, {

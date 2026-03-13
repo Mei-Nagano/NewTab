@@ -73,7 +73,7 @@ export const QrCodeTool: React.FC<ToolProps> = ({ theme }) => {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center ml-1">
-                                    <label className={`${hintTextClass} font-medium`}>输入内容</label>
+                                    <p className={`${hintTextClass} font-medium`}>输入内容</p>
                                     <div className="flex gap-2">
                                         <label className={`cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold transition-all ${theme === 'light' ? 'bg-gray-100 hover:bg-gray-200 text-gray-600' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
                                             <Upload size={12} />

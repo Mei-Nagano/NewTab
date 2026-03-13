@@ -16,6 +16,31 @@ interface UseAppActionsParams {
   setConfirmDialog: React.Dispatch<React.SetStateAction<{ isOpen: boolean; title: string; message: string; onConfirm: () => void } | null>>;
 }
 
+const removeLinkFromGroup = (
+  groups: AppSettings['groups'],
+  groupId: string,
+  linkId: string
+): AppSettings['groups'] =>
+  groups.map((group) => {
+    if (group.id !== groupId) return group;
+    return { ...group, links: group.links.filter((item) => item.id !== linkId) };
+  });
+
+const toSafeWallpaperUrl = (value: string): string | null => {
+  if (!value) return null;
+  if (value.startsWith('data:image/') || value.startsWith('blob:')) return value;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.toString();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 export const useAppActions = ({
   settings,
   setSettings,
@@ -37,9 +62,7 @@ export const useAppActions = ({
       title: '删除网站',
       message: `确定删除「${link.title}」吗？此操作不可撤销。`,
       onConfirm: () => {
-        const groups = settings.groups.map((group) =>
-          group.id === groupId ? { ...group, links: group.links.filter((item) => item.id !== link.id) } : group
-        );
+        const groups = removeLinkFromGroup(settings.groups, groupId, link.id);
         void saveAndApply({ ...settings, groups });
       },
     });
@@ -108,19 +131,20 @@ export const useAppActions = ({
       setEditingGroup(null);
     },
     saveWallpaper: async (backgroundImage: string) => {
-      if (!backgroundImage) return;
+      const safeWallpaperUrl = toSafeWallpaperUrl(backgroundImage);
+      if (!safeWallpaperUrl) return;
       try {
-        const response = await fetch(backgroundImage);
+        const response = await fetch(safeWallpaperUrl);
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = `wallpaper-${new Date().toISOString().split('T')[0]}.${blob.type.split('/')[1] || 'jpg'}`;
         link.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       } catch {
         const link = document.createElement('a');
-        link.href = backgroundImage;
+        link.href = safeWallpaperUrl;
         link.download = `wallpaper-${Date.now()}`;
         link.click();
       }
