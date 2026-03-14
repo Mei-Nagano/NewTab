@@ -20,6 +20,7 @@ describe('context-menu builders', () => {
     expect(paginationItems.some((item) => item.id === 'hide-options')).toBe(true);
     const hideMenu = paginationItems.find((item) => item.id === 'hide-options');
     expect(hideMenu?.children?.some((item) => item.id === 'hpc')).toBe(true);
+    expect(hideMenu?.children?.some((item) => item.id === 'hgn')).toBe(true);
 
     const scrollItems = buildBlankMenu({
       isLight: true,
@@ -37,14 +38,14 @@ describe('context-menu builders', () => {
     expect(scrollHideMenu?.children?.some((item) => item.id === 'hpc')).toBe(false);
   });
 
-  it('buildLinkMenu should return edit and delete actions', () => {
+  it('buildLinkMenu should return open, edit, and delete actions', () => {
     const items = buildLinkMenu({
       targetLink: { id: '1', title: 'A', url: 'https://a.com' },
       targetGroupId: 'g1',
       onEditLink: vi.fn(),
       onDeleteLink: vi.fn(),
     });
-    expect(items.map((item) => item.id)).toEqual(['edit-link', 'delete-link']);
+    expect(items.map((item) => item.id)).toEqual(['open-link-new-tab', 'edit-link', 'delete-link']);
   });
 
   it('buildGroupMenu should return edit action when group exists', () => {

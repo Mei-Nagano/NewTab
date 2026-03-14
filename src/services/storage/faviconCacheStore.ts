@@ -28,6 +28,14 @@ const buildCacheKey = (pageUrl: string): string | null => {
 
 export const buildLegacyFaviconKey = (cacheId: string): string => `${LEGACY_FAVICON_PREFIX}${cacheId}`;
 
+export const loadLegacyCachedFaviconSource = async (cacheId: string): Promise<string> => {
+  if (!cacheId) {
+    return '';
+  }
+
+  return await readRawFromStorage(buildLegacyFaviconKey(cacheId));
+};
+
 export const loadCachedFavicon = async (pageUrl: string): Promise<string> => {
   const key = buildCacheKey(pageUrl);
   if (!key) {

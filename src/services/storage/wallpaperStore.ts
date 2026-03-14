@@ -117,9 +117,14 @@ export const fetchBingWallpaper = async (): Promise<string> => {
   }
 };
 
-export const fetchRandomWallpaper = (): string => {
+export const fetchRandomWallpaper = async (): Promise<string> => {
   const timestamp = Date.now();
-  return `${PICSUM_RANDOM_WALLPAPER}?random=${timestamp}`;
+
+  try {
+    return await fetchImageAsDataUrl(`${PICSUM_RANDOM_WALLPAPER}?random=${timestamp}`);
+  } catch {
+    return DEFAULT_WALLPAPER;
+  }
 };
 
 export const listFavoriteWallpapers = async (): Promise<FavoriteWallpaper[]> => {

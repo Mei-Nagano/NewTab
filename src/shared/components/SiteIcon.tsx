@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { buildLegacyFaviconKey, loadCachedFavicon, saveCachedFavicon } from '@/services/storage';
+import {
+  loadCachedFavicon,
+  loadLegacyCachedFaviconSource,
+  saveCachedFavicon,
+} from '@/services/storage';
 
 interface IconCandidate {
   src: string;
@@ -78,13 +82,13 @@ const isAbortError = (error: unknown): boolean => {
   return error instanceof DOMException && error.name === 'AbortError';
 };
 
-const getLegacyIconSource = (linkId: string | undefined, url: string): string => {
+const getLegacyIconSource = async (linkId: string | undefined, url: string): Promise<string> => {
   const cacheId = linkId || url;
   if (!cacheId) {
     return '';
   }
 
-  return localStorage.getItem(buildLegacyFaviconKey(cacheId)) || '';
+  return await loadLegacyCachedFaviconSource(cacheId);
 };
 
 const getRemoteCandidates = (url: string, legacyIconSource: string): IconCandidate[] => {
@@ -113,7 +117,7 @@ const getRemoteCandidates = (url: string, legacyIconSource: string): IconCandida
   return candidates;
 };
 
-// Ä¬ÈÏÍ¼±ê×é¼þ
+// Ä¬ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½
 const DefaultIcon: React.FC<{ title: string; size?: string; className?: string }> = ({
   title,
   size = 'w-6 h-6',
@@ -165,7 +169,7 @@ const DefaultIcon: React.FC<{ title: string; size?: string; className?: string }
   );
 };
 
-// ÍøÕ¾Í¼±ê×é¼þ
+// ï¿½ï¿½Õ¾Í¼ï¿½ï¿½ï¿½ï¿½ï¿½
 export const SiteIcon: React.FC<{
   url: string;
   title: string;
@@ -219,7 +223,16 @@ export const SiteIcon: React.FC<{
         return;
       }
 
-      const remoteCandidates = getRemoteCandidates(url, getLegacyIconSource(linkId, url));
+      const legacyIconSource = await getLegacyIconSource(linkId, url);
+      if (!isMounted) {
+        return;
+      }
+      if (legacyIconSource.startsWith('data:image/')) {
+        applyLoadedSource(legacyIconSource);
+        return;
+      }
+
+      const remoteCandidates = getRemoteCandidates(url, legacyIconSource);
       if (remoteCandidates.length === 0) {
         setStatus('error');
         return;

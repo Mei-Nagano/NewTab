@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchBingWallpaper,
+  fetchRandomWallpaper,
   listFavoriteWallpapers,
   removeFavoriteWallpaper,
   saveFavoriteWallpaper,
@@ -57,6 +58,21 @@ describe('wallpaperStore', () => {
     const favorites = await listFavoriteWallpapers();
     expect(favorites).toHaveLength(1);
     expect(favorites[0]?.image).toBe('data:image/png;base64,favorite-1');
+  });
+
+  it('resolves random wallpaper to the exact image data that is displayed', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(new Blob(['img'], { type: 'image/jpeg' }), {
+        status: 200,
+        headers: { 'Content-Type': 'image/jpeg' },
+      })
+    );
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchRandomWallpaper()).resolves.toBe('data:image/jpeg;base64,mock-wallpaper');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toMatch(/^https:\/\/picsum\.photos\/1920\/1080\?random=\d+$/);
   });
 
   it('removes a favorite wallpaper by id', async () => {
